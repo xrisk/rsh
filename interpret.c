@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "builtin.h"
+#include "external.h"
 #include "interpret.h"
 #include "main.h"
 #include "parse.h"
@@ -17,5 +18,8 @@ void interpret() {
   if (search_builtin(shell_state.tokens, shell_state.n_tok))
     return;
 
-  printf("command not found: %s\n", shell_state.tokens[0]);
+  if (search_external_cmd(shell_state.tokens, shell_state.n_tok))
+    return;
+
+  /*printf("command not found: %s\n", shell_state.tokens[0]);*/
 }

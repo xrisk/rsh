@@ -49,7 +49,7 @@ void parse_subcommand(char *subcommand) {
   ptr = strtok(copy, " \t");
 
   shell_state.n_tok = ntokens;
-  shell_state.tokens = malloc(sizeof(char *) * ntokens);
+  shell_state.tokens = calloc(ntokens + 1, sizeof(char *)); // 1 null ptr
 
   size_t index = 0;
   while (ptr != NULL) {

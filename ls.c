@@ -9,7 +9,6 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <uuid/uuid.h>
 
 #include "ls.h"
 #include "main.h"
@@ -38,7 +37,7 @@ void print_longform(const char *dir, char *fname) {
   printf("%c", (buf.st_mode & S_IWOTH) ? 'w' : '-');
   printf("%c", (buf.st_mode & S_IXOTH) ? 'x' : '-');
 
-  printf("\t%d", buf.st_nlink);
+  printf("\t%lu", (unsigned long)buf.st_nlink);
 
   struct passwd *pwEnt = getpwuid(buf.st_uid);
   printf("\t%s", pwEnt->pw_name);
@@ -46,7 +45,7 @@ void print_longform(const char *dir, char *fname) {
   struct group *grpEnt = getgrgid(buf.st_gid);
   printf("\t%s", grpEnt->gr_name);
 
-  printf("\t%lld", buf.st_size);
+  printf("\t%llu", (unsigned long long)buf.st_size);
 
   struct tm *tm_info = localtime(&buf.st_mtime);
   char fmt_time[128];
