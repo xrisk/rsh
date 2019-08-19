@@ -36,12 +36,25 @@ void split_into_subcommands(char *line) {
 
 void parse_subcommand(char *subcommand) {
 
+  size_t len = strlen(subcommand);
+  for (size_t i = len - 1; i >= 0; --i) {
+    char c = subcommand[i];
+    if (c == '&') {
+      shell_state.bg = true;
+      break;
+    } else if (!(c == '\t' || c == ' ')) {
+      break;
+    }
+  }
+
   char *copy = strdup(subcommand);
   char *ptr = strtok(copy, " \t");
 
   size_t ntokens = 0;
   while (ptr != NULL) {
-    ++ntokens;
+    if (strcmp(ptr, "&") != 0) {
+      ++ntokens;
+    }
     ptr = strtok(NULL, " \t");
   }
 
@@ -53,8 +66,17 @@ void parse_subcommand(char *subcommand) {
 
   size_t index = 0;
   while (ptr != NULL) {
+
+    if (strcmp(ptr, "&") == 0) {
+      ptr = strtok(NULL, " \t");
+      continue;
+    }
     shell_state.tokens[index] = calloc(strlen(ptr) + 1, sizeof(char));
     strcpy(shell_state.tokens[index], ptr);
+    size_t len = strlen(shell_state.tokens[index]);
+    if (shell_state.tokens[index][len - 1] == '&') {
+      shell_state.tokens[index][len - 1] = '\0';
+    }
     ptr = strtok(NULL, " \t");
     index++;
   }

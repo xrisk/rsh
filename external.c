@@ -7,8 +7,49 @@
 #include <unistd.h>
 
 #include "external.h"
+#include "main.h"
 
-bool search_external_cmd(char **tokens, size_t n_tok) {
+extern struct state shell_state;
+
+bool do_background_command(char **tokens, size_t n_tok) {
+
+  pid_t forkPID;
+  fprintf(stderr, "executing background\n");
+
+  if ((forkPID = fork()) < 0) {
+    perror("failed to fork");
+    return false;
+  } else if (forkPID == 0) {
+
+    pid_t myPID = getpid();
+    setpgid(myPID, myPID);
+
+    /* https://www.gnu.org/software/libc/manual/html_node/Initializing-the-Shell.html#Initializing-the-Shell
+     */
+
+    signal(SIGINT, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
+    signal(SIGTSTP, SIG_DFL);
+    signal(SIGTTIN, SIG_DFL);
+    signal(SIGTTOU, SIG_DFL);
+    signal(SIGCHLD, SIG_DFL);
+
+    int ret = execvp(tokens[0], tokens);
+    if (ret < 0)
+      _exit(errno);
+    else
+      _exit(0);
+  } else {
+
+    setpgid(forkPID, forkPID);
+    return true;
+  }
+}
+
+bool search_external_cmd(char **tokens, size_t n_tok, bool bg) {
+
+  if (bg)
+    return do_background_command(tokens, n_tok);
 
   pid_t forkPID, w;
   int status;
@@ -16,35 +57,50 @@ bool search_external_cmd(char **tokens, size_t n_tok) {
   forkPID = fork();
 
   if (forkPID == 0) {
+
+    pid_t myPID = getpid();
+    setpgid(myPID, myPID);
+    tcsetpgrp(shell_state.shell_terminal, myPID);
+
+    /*https://www.gnu.org/software/libc/manual/html_node/Initializing-the-Shell.html#Initializing-the-Shell*/
+
+    signal(SIGINT, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
+    signal(SIGTSTP, SIG_DFL);
+    signal(SIGTTIN, SIG_DFL);
+    signal(SIGTTOU, SIG_DFL);
+    signal(SIGCHLD, SIG_DFL);
+
+    printf("executing %s\n", tokens[0]);
+
     int ret = execvp(tokens[0], tokens);
-    if (ret < 0)
-      _exit(errno);
-    else
+    if (ret < 0) {
+      perror("execvp");
+      _exit(0);
+    } else
       _exit(0);
   } else {
-    do {
-      w = waitpid(forkPID, &status, WUNTRACED | WCONTINUED);
-      if (w == -1) {
-        perror("waitpid");
-        exit(EXIT_FAILURE);
-      }
-      if (WIFEXITED(status)) {
-        int exitstatus = WEXITSTATUS(status);
-        if (exitstatus == 0)
-          return true;
-        else {
-          errno = exitstatus;
-          perror(tokens[0]);
-          return false;
-        }
-      } else if (WIFSIGNALED(status)) {
-        printf("killed by signal %d\n", WTERMSIG(status));
-      } else if (WIFSTOPPED(status)) {
-        printf("stopped by signal %d\n", WSTOPSIG(status));
-      } else if (WIFCONTINUED(status)) {
-        printf("continued\n");
-      }
-    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+
+    setpgid(forkPID, forkPID);
+    tcsetpgrp(shell_state.shell_terminal, forkPID);
+
+    w = waitpid(forkPID, &status, 0);
+
+    if (w == -1) {
+      fprintf(stderr, "Line %d: ", __LINE__);
+      perror("waitpid");
+      exit(EXIT_FAILURE);
+    }
+    if (WIFEXITED(status)) {
+      int exitstatus = WEXITSTATUS(status);
+      tcsetpgrp(shell_state.shell_terminal, getpid());
+      return true;
+    } else if (WIFSIGNALED(status)) {
+      fprintf(stderr, "pid %d killed by signal %d\n", forkPID,
+              WTERMSIG(status));
+      return true;
+    }
+
     return true;
   }
 }
