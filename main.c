@@ -63,6 +63,14 @@ void sigchld_handler() {
     }
     if (ch == 0)
       return;
+
+    if (ch == shell_state.fg_pid) {
+      shell_state.fg_pid = -1;
+#ifdef DEBUG
+      printf("fg ended\n");
+#endif
+    }
+
     f = true;
     fprintf(stderr, "pid %d exited", ch);
     if (WIFEXITED(status))
@@ -92,7 +100,6 @@ void initialize() {
     signal(SIGTSTP, SIG_IGN);
     signal(SIGTTIN, SIG_IGN);
     signal(SIGTTOU, SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
 
     pid_t shell_pgid = getpid();
     if (setpgid(shell_pgid, shell_pgid < 0)) {
@@ -123,12 +130,12 @@ int main() {
 
     signal(SIGCHLD, sigchld_handler);
     if (getline(&line, &line_sz, stdin) < 0) {
-      perror("getline");
+      if (errno == EAGAIN)
+        continue;
       cleanup();
       break;
     }
 
-    signal(SIGCHLD, SIG_DFL);
     line[strcspn(line, "\n")] = '\0';
     split_into_subcommands(line);
 

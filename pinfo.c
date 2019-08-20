@@ -15,7 +15,13 @@ extern struct state shell_state;
 void disp_pinfo(pid_t pid) {
   printf("pid -- %d\n", pid);
 
+#ifdef __APPLE__
+  fprintf(stderr, "pinfo not supported on macOS\n");
+  return;
+#endif
+
   char *path;
+
   asprintf(&path, "/proc/%d/status", pid);
   FILE *f = fopen(path, "r");
   int len = 4096;

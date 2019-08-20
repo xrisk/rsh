@@ -1,5 +1,5 @@
 CFLAGS=-O0 -g -Wall -Wextra -Wpedantic
-CC=cc
+CC=gcc-9
 
 all: shell
 

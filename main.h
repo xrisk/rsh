@@ -18,6 +18,7 @@ struct state {
   int shell_terminal;
   int shell_is_interactive;
   pid_t shell_pgid;
+  pid_t fg_pid;
 
   struct termios shell_tmodes;
 };

@@ -15,12 +15,14 @@ void interpret() {
   if (shell_state.n_tok == 0)
     return;
 
+#ifdef DEBUG
   fprintf(stderr, "ntok: %zu bg: %s parsed: ", shell_state.n_tok,
           shell_state.bg ? "yes" : "no");
   for (size_t i = 0; i < shell_state.n_tok; ++i) {
     fprintf(stderr, "%s ", shell_state.tokens[i]);
   }
   fprintf(stderr, "\n");
+#endif
 
   if (search_builtin(shell_state.tokens, shell_state.n_tok))
     return;

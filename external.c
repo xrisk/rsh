@@ -35,7 +35,6 @@ bool do_background_command(char **tokens) {
     signal(SIGTSTP, SIG_DFL);
     signal(SIGTTIN, SIG_DFL);
     signal(SIGTTOU, SIG_DFL);
-    signal(SIGCHLD, SIG_DFL);
 
     int ret = execvp(tokens[0], tokens);
     if (ret < 0)
@@ -72,7 +71,6 @@ bool search_external_cmd(char **tokens, bool bg) {
     signal(SIGTSTP, SIG_DFL);
     signal(SIGTTIN, SIG_DFL);
     signal(SIGTTOU, SIG_DFL);
-    signal(SIGCHLD, SIG_DFL);
 
     printf("executing %s\n", tokens[0]);
 
@@ -83,29 +81,16 @@ bool search_external_cmd(char **tokens, bool bg) {
     } else
       _exit(0);
   } else {
-
     setpgid(forkPID, forkPID);
-    tcsetpgrp(shell_state.shell_terminal, forkPID);
+    shell_state.fg_pid = forkPID;
 
-    w = waitpid(forkPID, &status, 0);
-
-    if (w == -1) {
-      fprintf(stderr, "Line %d: ", __LINE__);
-      perror("waitpid");
-      exit(EXIT_FAILURE);
-    }
-    if (WIFEXITED(status)) {
-      int exitstatus = WEXITSTATUS(status);
-      fprintf(stderr, "pid %d exited with status %d\n", forkPID, exitstatus);
-      tcsetpgrp(shell_state.shell_terminal, getpid());
-      return true;
-    } else if (WIFSIGNALED(status)) {
-      fprintf(stderr, "pid %d killed by signal %d\n", forkPID,
-              WTERMSIG(status));
-      tcsetpgrp(shell_state.shell_terminal, getpid());
-      return true;
+    if (!bg) {
+      shell_state.shell_pgid = tcsetpgrp(shell_state.shell_terminal, forkPID);
     }
 
-    return true;
+    while (shell_state.fg_pid != -1) {
+    }
+
+    tcsetpgrp(shell_state.shell_terminal, getpid());
   }
 }
