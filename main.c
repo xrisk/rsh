@@ -1,8 +1,12 @@
+
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "interpret.h"
@@ -47,18 +51,27 @@ void set_homedir() {
   strncpy(shell_state.homedir, homedir, sizeof(shell_state.homedir));
 }
 
-void sigchld_handler(int sig) {
+void sigchld_handler() {
   int status;
-  pid_t ch = waitpid(-1, &status, WNOHANG);
-  if (ch == 0)
-    return;
-  fprintf(stderr, "pid %d exited", ch);
-  if (WIFEXITED(status))
-    fprintf(stderr, " with return status %d\n", WEXITSTATUS(status));
-  else if (WIFSIGNALED(status))
-    fprintf(stderr, " because of signal %d\n", WTERMSIG(status));
-  else
-    fprintf(stderr, " abnormally reason unknown\n");
+  bool f = false;
+
+  do {
+    f = false;
+    pid_t ch = waitpid(-1, &status, WNOHANG);
+    if (ch == -1) {
+      return;
+    }
+    if (ch == 0)
+      return;
+    f = true;
+    fprintf(stderr, "pid %d exited", ch);
+    if (WIFEXITED(status))
+      fprintf(stderr, " with return status %d\n", WEXITSTATUS(status));
+    else if (WIFSIGNALED(status))
+      fprintf(stderr, " because of signal %d\n", WTERMSIG(status));
+    else
+      fprintf(stderr, " abnormally reason unknown\n");
+  } while (f);
 }
 
 void initialize() {
@@ -109,8 +122,12 @@ int main() {
     show_prompt();
 
     signal(SIGCHLD, sigchld_handler);
-    if (getline(&line, &line_sz, stdin) < 0)
+    if (getline(&line, &line_sz, stdin) < 0) {
+      perror("getline");
+      cleanup();
       break;
+    }
+
     signal(SIGCHLD, SIG_DFL);
     line[strcspn(line, "\n")] = '\0';
     split_into_subcommands(line);

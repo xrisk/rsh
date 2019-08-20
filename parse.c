@@ -36,8 +36,8 @@ void split_into_subcommands(char *line) {
 
 void parse_subcommand(char *subcommand) {
 
-  size_t len = strlen(subcommand);
-  for (size_t i = len - 1; i >= 0; --i) {
+  long len = strlen(subcommand);
+  for (long i = len - 1; i >= 0; --i) {
     char c = subcommand[i];
     if (c == '&') {
       shell_state.bg = true;

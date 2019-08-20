@@ -8,6 +8,7 @@
 #include "builtin.h"
 #include "ls.h"
 #include "main.h"
+#include "pinfo.h"
 #include "prompt.h"
 
 extern struct state shell_state;
@@ -40,6 +41,9 @@ bool search_builtin(char **tokens, size_t ntok) {
     return true;
   } else if (strcmp(tokens[0], "ls") == 0) {
     ls();
+    return true;
+  } else if (strcmp(tokens[0], "pinfo") == 0) {
+    pinfo();
     return true;
   }
 

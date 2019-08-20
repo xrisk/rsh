@@ -24,8 +24,11 @@ ls.o: ls.c
 external.o: external.c
 	$(CC) $(CFLAGS) -c external.c
 
-shell: main.o prompt.o parse.o interpret.o builtin.o ls.o external.o
-	$(CC) $(CLAGS) main.o prompt.o parse.o builtin.o interpret.o external.o ls.o -o shell
+pinfo.o: pinfo.c
+	$(CC) $(CFLAGS) -c pinfo.c
+
+shell: main.o prompt.o parse.o interpret.o builtin.o ls.o external.o pinfo.o
+	$(CC) $(CLAGS) main.o prompt.o parse.o builtin.o interpret.o external.o pinfo.o ls.o -o shell
 
 clean:
 	rm *.o shell

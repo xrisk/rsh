@@ -43,6 +43,8 @@ char *get_shortdir(void) {
 
   char *homedir = shell_state.homedir;
 
+  get_cwd();
+
   homedir_len = strlen(homedir);
   cwd_len = strlen(shell_state.cwd);
 
@@ -73,10 +75,9 @@ char *get_shortdir(void) {
 }
 
 void show_prompt(void) {
-  char *user, *host, *cwd, *shortdir;
+  char *user, *host, *shortdir;
   user = get_user_name();
   host = get_computer_name();
-  cwd = get_cwd();
   shortdir = get_shortdir();
   printf("<%s@%s:%s> ", user, host, shortdir);
 }
