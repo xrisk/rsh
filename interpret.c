@@ -25,9 +25,9 @@ void interpret() {
   if (search_builtin(shell_state.tokens, shell_state.n_tok))
     return;
 
-  if (search_external_cmd(shell_state.tokens, shell_state.n_tok,
-                          shell_state.bg))
-    return;
+  if (search_external_cmd(shell_state.tokens, shell_state.bg))
+    ;
+  return;
 
   /*printf("command not found: %s\n", shell_state.tokens[0]);*/
 }

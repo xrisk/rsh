@@ -11,7 +11,7 @@
 
 extern struct state shell_state;
 
-bool do_background_command(char **tokens, size_t n_tok) {
+bool do_background_command(char **tokens) {
 
   pid_t forkPID;
   fprintf(stderr, "executing background\n");
@@ -46,10 +46,10 @@ bool do_background_command(char **tokens, size_t n_tok) {
   }
 }
 
-bool search_external_cmd(char **tokens, size_t n_tok, bool bg) {
+bool search_external_cmd(char **tokens, bool bg) {
 
   if (bg)
-    return do_background_command(tokens, n_tok);
+    return do_background_command(tokens);
 
   pid_t forkPID, w;
   int status;
@@ -93,11 +93,13 @@ bool search_external_cmd(char **tokens, size_t n_tok, bool bg) {
     }
     if (WIFEXITED(status)) {
       int exitstatus = WEXITSTATUS(status);
+      fprintf(stderr, "pid %d exited with status %d\n", forkPID, exitstatus);
       tcsetpgrp(shell_state.shell_terminal, getpid());
       return true;
     } else if (WIFSIGNALED(status)) {
       fprintf(stderr, "pid %d killed by signal %d\n", forkPID,
               WTERMSIG(status));
+      tcsetpgrp(shell_state.shell_terminal, getpid());
       return true;
     }
 
