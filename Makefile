@@ -1,5 +1,5 @@
 CFLAGS=-O0 -g -Wall -Wextra -Wpedantic
-CC=gcc-9
+CC=cc
 
 all: shell
 
@@ -27,8 +27,12 @@ external.o: external.c
 pinfo.o: pinfo.c
 	$(CC) $(CFLAGS) -c pinfo.c
 
-shell: main.o prompt.o parse.o interpret.o builtin.o ls.o external.o pinfo.o
-	$(CC) $(CLAGS) main.o prompt.o parse.o builtin.o interpret.o external.o pinfo.o ls.o -o shell
+nightswatch.o: nightswatch.c
+	$(CC) $(CFLAGS) -c nightswatch.c
+
+
+shell: main.o prompt.o parse.o interpret.o builtin.o ls.o external.o pinfo.o nightswatch.o
+	$(CC) $(CLAGS) main.o prompt.o parse.o builtin.o interpret.o external.o pinfo.o ls.o nightswatch.o -o shell
 
 clean:
 	rm *.o shell

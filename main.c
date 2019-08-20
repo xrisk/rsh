@@ -132,6 +132,7 @@ int main() {
     if (getline(&line, &line_sz, stdin) < 0) {
       if (errno == EAGAIN)
         continue;
+      perror("getline");
       cleanup();
       break;
     }
@@ -147,5 +148,5 @@ int main() {
   }
 
   cleanup();
-  _exit(0);
+  return 0;
 }

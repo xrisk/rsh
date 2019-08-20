@@ -8,6 +8,7 @@
 #include "builtin.h"
 #include "ls.h"
 #include "main.h"
+#include "nightswatch.h"
 #include "pinfo.h"
 #include "prompt.h"
 
@@ -44,6 +45,15 @@ bool search_builtin(char **tokens, size_t ntok) {
     return true;
   } else if (strcmp(tokens[0], "pinfo") == 0) {
     pinfo();
+    return true;
+  } else if (strcmp(tokens[0], "nightswatch") == 0) {
+    nightswatch();
+    return true;
+  } else if (strcmp(tokens[0], "dirty") == 0) {
+    dirty();
+    return true;
+  } else if (strcmp(tokens[0], "interrupt") == 0) {
+    interrupt();
     return true;
   }
 

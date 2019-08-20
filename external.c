@@ -53,8 +53,7 @@ bool search_external_cmd(char **tokens, bool bg) {
   if (bg)
     return do_background_command(tokens);
 
-  pid_t forkPID, w;
-  int status;
+  pid_t forkPID;
 
   forkPID = fork();
 
@@ -93,4 +92,6 @@ bool search_external_cmd(char **tokens, bool bg) {
 
     tcsetpgrp(shell_state.shell_terminal, getpid());
   }
+
+  return true;
 }
