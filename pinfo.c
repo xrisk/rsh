@@ -24,6 +24,14 @@ void disp_pinfo(pid_t pid) {
 
   asprintf(&path, "/proc/%d/status", pid);
   FILE *f = fopen(path, "r");
+
+  if (f == NULL) {
+    perror("fopen");
+    free(path);
+    path = NULL;
+    return;
+  }
+
   int len = 4096;
   char *buffer = calloc(len, sizeof(char));
   int c, idx = 0;
@@ -68,6 +76,21 @@ void disp_pinfo(pid_t pid) {
   }
 
   printf("state: %s\nmem: %s\nexe path:%s\n", state, mem, exe_path);
+
+  free(path);
+  path = NULL;
+  free(buffer);
+  buffer = NULL;
+  free(state);
+  state = NULL;
+  free(mem);
+  mem = NULL;
+  free(exe_path);
+  exe_path = NULL;
+  free(tmp);
+  tmp = NULL;
+
+  fclose(f);
 }
 
 void pinfo() {

@@ -20,31 +20,33 @@ struct state shell_state;
 #define LINE_SIZE (1 * 1024 * 1024)
 /* 1M line size seems good */
 
-void free_line(void) {
+void free_tokens(void) {
   if (shell_state.tokens != NULL) {
     for (size_t i = 0; i < shell_state.n_tok; ++i) {
       if (shell_state.tokens[i] != NULL) {
         free(shell_state.tokens[i]);
         shell_state.tokens[i] = NULL;
       }
-      free(shell_state.tokens);
-      shell_state.tokens = NULL;
-      shell_state.n_tok = 0;
     }
-
-    if (shell_state.subcommands != NULL) {
-      for (size_t i = 0; i < shell_state.n_subcommands; ++i) {
-        if (shell_state.subcommands[i] != NULL) {
-          free(shell_state.subcommands[i]);
-          shell_state.subcommands[i] = NULL;
-        }
-      }
-      free(shell_state.subcommands);
-      shell_state.subcommands = NULL;
-      shell_state.n_subcommands = 0;
-    }
-    shell_state.bg = false;
+    free(shell_state.tokens);
+    shell_state.tokens = NULL;
+    shell_state.n_tok = 0;
   }
+}
+
+void free_subcommands(void) {
+  if (shell_state.subcommands != NULL) {
+    for (size_t i = 0; i < shell_state.n_subcommands; ++i) {
+      if (shell_state.subcommands[i] != NULL) {
+        free(shell_state.subcommands[i]);
+        shell_state.subcommands[i] = NULL;
+      }
+    }
+    free(shell_state.subcommands);
+    shell_state.subcommands = NULL;
+    shell_state.n_subcommands = 0;
+  }
+  shell_state.bg = false;
 }
 
 void set_homedir() {
@@ -69,6 +71,10 @@ void sigchld_handler() {
       shell_state.fg_pid = -1;
 #ifdef DEBUG
       printf("fg ended\n");
+#endif
+
+#ifndef DEBUG
+      continue;
 #endif
     }
 
@@ -119,6 +125,7 @@ void initialize() {
 }
 
 void cleanup() {
+  free_history();
   tcsetattr(shell_state.shell_terminal, TCSADRAIN, &shell_state.shell_tmodes);
 }
 
@@ -138,8 +145,7 @@ int main() {
     if (getline(&line, &line_sz, stdin) < 0) {
       if (errno == EAGAIN)
         continue;
-      cleanup();
-      break;
+      goto end;
     }
 
     line[strcspn(line, "\n")] = '\0';
@@ -147,11 +153,22 @@ int main() {
 
     for (size_t i = 0; i < shell_state.n_subcommands; ++i) {
       parse_subcommand(shell_state.subcommands[i]);
-      interpret();
+      if (interpret() == QUIT_NOW) {
+        goto end;
+      }
+      free_tokens();
     }
 
     add_history_entry(line);
-    free_line();
+    free_subcommands();
+  }
+
+end:
+  free_tokens();
+  free_subcommands();
+  if (line != NULL) {
+    free(line);
+    line = NULL;
   }
 
   cleanup();

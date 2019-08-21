@@ -4,6 +4,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool search_external_cmd(char **tokens, bool bg);
+int search_external_cmd(char **tokens, bool bg);
 
 #endif

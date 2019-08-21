@@ -11,9 +11,9 @@
 
 extern struct state shell_state;
 
-void interpret() {
+int interpret() {
   if (shell_state.n_tok == 0)
-    return;
+    return true;
 
 #ifdef DEBUG
   fprintf(stderr, "ntok: %zu bg: %s parsed: ", shell_state.n_tok,
@@ -24,11 +24,11 @@ void interpret() {
   fprintf(stderr, "\n");
 #endif
 
-  if (search_builtin(shell_state.tokens, shell_state.n_tok))
-    return;
-
-  search_external_cmd(shell_state.tokens, shell_state.bg);
-  return;
-
-  /*printf("command not found: %s\n", shell_state.tokens[0]);*/
+  int ret = search_builtin(shell_state.tokens, shell_state.n_tok);
+  if (ret == QUIT_NOW)
+    return QUIT_NOW;
+  else if (ret == true)
+    return true;
+  else
+    return search_external_cmd(shell_state.tokens, shell_state.bg);
 }

@@ -32,9 +32,16 @@ void split_into_subcommands(char *line) {
     ptr = strtok(NULL, ";");
     index++;
   }
+
+  if (copy != NULL) {
+    free(copy);
+    copy = NULL;
+  }
 }
 
 void parse_subcommand(char *subcommand) {
+
+  shell_state.bg = false;
 
   long len = strlen(subcommand);
   for (long i = len - 1; i >= 0; --i) {
@@ -79,5 +86,10 @@ void parse_subcommand(char *subcommand) {
     }
     ptr = strtok(NULL, " \t");
     index++;
+  }
+
+  if (copy != NULL) {
+    free(copy);
+    copy = NULL;
   }
 }

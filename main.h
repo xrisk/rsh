@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <termios.h>
 
+#define QUIT_NOW 1337
+
 struct state {
   char cwd[MAX_PATH_LEN], hostname[MAX_PATH_LEN], username[MAX_PATH_LEN],
       shortdir[MAX_PATH_LEN], homedir[MAX_PATH_LEN];

@@ -99,7 +99,7 @@ void ls(void) {
 
   if (n_dirs == 0) {
     assert(shell_state.n_tok != 0);
-    dirs[0] = ".";
+    dirs[0] = strdup(".");
     ++n_dirs;
   }
 
@@ -156,5 +156,18 @@ void ls(void) {
 
     if (i != (n_dirs - 1))
       printf("\n");
+  }
+
+  for (size_t i = 0; i < shell_state.n_tok; i++) {
+    if (dirs[i] != NULL) {
+      /*printf("%s\n", dirs[i]);*/
+      free(dirs[i]);
+      dirs[i] = NULL;
+    }
+  }
+
+  if (dirs != NULL) {
+    free(dirs);
+    dirs = NULL;
   }
 }

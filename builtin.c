@@ -15,7 +15,7 @@
 
 extern struct state shell_state;
 
-bool search_builtin(char **tokens, size_t ntok) {
+int search_builtin(char **tokens, size_t ntok) {
   if (ntok == 0)
     return true;
 
@@ -59,6 +59,8 @@ bool search_builtin(char **tokens, size_t ntok) {
   } else if (strcmp(tokens[0], "history") == 0) {
     show_history();
     return true;
+  } else if (strcmp(tokens[0], "exit") == 0) {
+    return QUIT_NOW;
   }
 
   return false;

@@ -14,10 +14,13 @@
 
 extern struct state shell_state;
 
-bool do_background_command(char **tokens) {
+int do_background_command(char **tokens) {
 
   pid_t forkPID;
+
+#if DEBUG
   fprintf(stderr, "executing background\n");
+#endif
 
   if ((forkPID = fork()) < 0) {
     perror("failed to fork");
@@ -35,20 +38,17 @@ bool do_background_command(char **tokens) {
     signal(SIGTSTP, SIG_DFL);
     signal(SIGTTIN, SIG_DFL);
     signal(SIGTTOU, SIG_DFL);
+    execvp(tokens[0], tokens);
+    perror("execvp");
 
-    int ret = execvp(tokens[0], tokens);
-    if (ret < 0)
-      _exit(errno);
-    else
-      _exit(0);
+    return QUIT_NOW;
   } else {
-
     setpgid(forkPID, forkPID);
     return true;
   }
 }
 
-bool search_external_cmd(char **tokens, bool bg) {
+int search_external_cmd(char **tokens, bool bg) {
 
   if (bg)
     return do_background_command(tokens);
@@ -71,14 +71,14 @@ bool search_external_cmd(char **tokens, bool bg) {
     signal(SIGTTIN, SIG_DFL);
     signal(SIGTTOU, SIG_DFL);
 
+#if DEBUG
     printf("executing %s\n", tokens[0]);
+#endif
 
-    int ret = execvp(tokens[0], tokens);
-    if (ret < 0) {
-      perror("execvp");
-      _exit(0);
-    } else
-      _exit(0);
+    execvp(tokens[0], tokens);
+    perror("execvp");
+    return QUIT_NOW;
+
   } else {
     setpgid(forkPID, forkPID);
     shell_state.fg_pid = forkPID;
