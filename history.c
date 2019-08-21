@@ -14,7 +14,6 @@ void initialize_history() {
 }
 
 void add_history_entry(char *line) {
-
   int new_index = (shell_state.head - 1) % MAX_HISTORY;
   if (new_index < 0)
     new_index += MAX_HISTORY;
@@ -27,7 +26,6 @@ void add_history_entry(char *line) {
 }
 
 void show_history() {
-
   int idx = shell_state.head;
   int ctr = 1;
 

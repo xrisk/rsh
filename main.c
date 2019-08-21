@@ -112,6 +112,9 @@ void initialize() {
     tcgetattr(shell_state.shell_terminal, &shell_state.shell_tmodes);
 
     initialize_history();
+  } else {
+    fprintf(stderr, "stdin is not a tty; exiting!\n");
+    exit(1);
   }
 }
 
@@ -135,7 +138,6 @@ int main() {
     if (getline(&line, &line_sz, stdin) < 0) {
       if (errno == EAGAIN)
         continue;
-      perror("getline");
       cleanup();
       break;
     }
