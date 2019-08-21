@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #define MAX_PATH_LEN 4096
+#define MAX_HISTORY 20
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -21,6 +22,8 @@ struct state {
   pid_t fg_pid;
 
   struct termios shell_tmodes;
+  char *history[MAX_HISTORY];
+  int n_history, head;
 };
 
 #endif

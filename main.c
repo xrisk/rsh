@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "history.h"
 #include "interpret.h"
 #include "main.h"
 #include "parse.h"
@@ -109,6 +110,8 @@ void initialize() {
 
     tcsetpgrp(shell_state.shell_terminal, shell_pgid);
     tcgetattr(shell_state.shell_terminal, &shell_state.shell_tmodes);
+
+    initialize_history();
   }
 }
 
@@ -144,6 +147,8 @@ int main() {
       parse_subcommand(shell_state.subcommands[i]);
       interpret();
     }
+
+    add_history_entry(line);
     free_line();
   }
 

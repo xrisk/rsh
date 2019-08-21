@@ -30,9 +30,12 @@ pinfo.o: pinfo.c
 nightswatch.o: nightswatch.c
 	$(CC) $(CFLAGS) -c nightswatch.c
 
+history.o: history.c
+	$(CC) $(CFLAGS) -c history.c
 
-shell: main.o prompt.o parse.o interpret.o builtin.o ls.o external.o pinfo.o nightswatch.o
-	$(CC) $(CLAGS) main.o prompt.o parse.o builtin.o interpret.o external.o pinfo.o ls.o nightswatch.o -o shell
+
+shell: main.o prompt.o parse.o interpret.o builtin.o ls.o external.o pinfo.o nightswatch.o history.o
+	$(CC) $(CLAGS) main.o prompt.o parse.o builtin.o interpret.o external.o pinfo.o ls.o nightswatch.o history.o -o shell 
 
 clean:
-	rm *.o shell
+	rm *.o shell || true

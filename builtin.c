@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "builtin.h"
+#include "history.h"
 #include "ls.h"
 #include "main.h"
 #include "nightswatch.h"
@@ -54,6 +55,9 @@ bool search_builtin(char **tokens, size_t ntok) {
     return true;
   } else if (strcmp(tokens[0], "interrupt") == 0) {
     interrupt();
+    return true;
+  } else if (strcmp(tokens[0], "history") == 0) {
+    show_history();
     return true;
   }
 
