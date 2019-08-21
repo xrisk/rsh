@@ -44,6 +44,8 @@ void interrupt(int header) {
   }
 
   free(buffer);
+  if (f != NULL)
+    fclose(f);
 }
 
 void dirty() {
@@ -76,6 +78,8 @@ void dirty() {
     ptr = strtok(NULL, "\n");
   }
   free(buffer);
+  if (f != NULL)
+    fclose(f);
 }
 
 void nightswatch() {
@@ -86,9 +90,13 @@ void nightswatch() {
 
   switch (fpid = fork()) {
 
-  case 0:
+  case 0:;
 
-    signal(SIGINT, SIG_DFL);
+    /*signal(SIGINT, SIG_DFL);*/
+    /*signal(SIGQUIT, SIG_DFL);*/
+    /*signal(SIGTSTP, SIG_DFL);*/
+    /*signal(SIGTTIN, SIG_DFL);*/
+    /*signal(SIGTTOU, SIG_DFL);*/
 
     bool header = 1;
 
@@ -110,6 +118,6 @@ void nightswatch() {
     while ((c = getchar() != '\n'))
       ;
 
-    kill(fpid, SIGINT);
+    kill(fpid, SIGKILL);
   }
 }
