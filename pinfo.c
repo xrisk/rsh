@@ -59,8 +59,8 @@ void disp_pinfo(pid_t pid) {
         ptr++;
       state = strdup(ptr);
     }
-    if (strncmp(ptr, "VmSize", strlen("VmSize")) == 0) {
-      ptr += strlen("VmSize:");
+    if (strncmp(ptr, "VmRSS", strlen("VmRSS")) == 0) {
+      ptr += strlen("VmRSS:");
       while (*ptr == ' ' || *ptr == '\t')
         ptr++;
       mem = strdup(ptr);
