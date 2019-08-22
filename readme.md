@@ -14,7 +14,7 @@ ninja -C build
 The executable can be found at `bin/rsh`.
 
 
-### Components:
+## Components:
 
 * `builtin.c`: matches the input against the list of builtins; currently `cd`, `pwd`, `echo`, `ls`, `pinfo`, `nightswatch`, `dirty`, `interrupt`, `history` and `exit`
 * `history.c`: responsible for loading the history list from disk, maintaining it in memory, and persisting to file on exit
