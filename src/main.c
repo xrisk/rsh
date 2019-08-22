@@ -166,6 +166,8 @@ int main() {
 end:
   free_tokens();
   free_subcommands();
+  persist_history();
+
   if (line != NULL) {
     free(line);
     line = NULL;

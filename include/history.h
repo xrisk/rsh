@@ -5,5 +5,6 @@ void add_history_entry();
 void show_history();
 void initialize_history();
 void free_history();
+void persist_history();
 
 #endif
