@@ -129,6 +129,34 @@ void cleanup() {
   tcsetattr(shell_state.shell_terminal, TCSADRAIN, &shell_state.shell_tmodes);
 }
 
+void glob(char **ptr_to_line) {
+
+  char *line = *ptr_to_line;
+  /* line should be allocated on the heap; as realloc will be called on it */
+  int tilde_count = 0;
+  for (size_t i = 0; i < strlen(line); ++i) {
+    if (line[i] == '~')
+      tilde_count++;
+  }
+  char *new =
+      calloc(strlen(line) + strlen(shell_state.homedir) * tilde_count + 1,
+             sizeof(char));
+
+  char *ptr = new;
+  for (size_t i = 0; i < strlen(line); ++i) {
+    if (line[i] == '~') {
+      ptr = stpcpy(ptr, shell_state.homedir);
+    } else {
+      *ptr = line[i];
+      ++ptr;
+    }
+  }
+
+  *ptr_to_line = realloc(line, strlen(new));
+  strcpy(*ptr_to_line, new);
+  free(new);
+}
+
 int main() {
 
   char *line = NULL;
@@ -149,6 +177,8 @@ int main() {
     }
 
     line[strcspn(line, "\n")] = '\0';
+    glob(&line);
+
     split_into_subcommands(line);
 
     for (size_t i = 0; i < shell_state.n_subcommands; ++i) {
