@@ -92,9 +92,12 @@ void launch_job(job *j, int fg) {
 
   process *proc;
 
+  if (j->first_process->next_process == NULL && j->first_process->n_tokens == 0)
+    return;
+
   for (proc = j->first_process; proc; proc = proc->next_process) {
     if (proc->n_tokens == 0) {
-      fprintf(stderr, "empty process in job!\n");
+      fprintf(stderr, "empty process in job\n");
       return;
     }
   }
