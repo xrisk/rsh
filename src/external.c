@@ -19,8 +19,57 @@ extern struct state shell_state;
 
 /* https://www.gnu.org/software/libc/manual/html_node/Launching-Jobs.html#Launching-Jobs
  */
+
+bool launch_builtin(process *proc, int infile, int outfile) {
+   if (proc->infile != NULL) {
+    int fd = open(proc->infile, O_RDONLY);
+    if (fd < 0) {
+      perror("open");
+      return true;
+    }
+    infile = fd;
+  }
+
+  int in = dup(infile);
+  int out = dup(outfile);
+
+  if (infile != STDIN_FILENO) {
+    dup2(infile, STDIN_FILENO);
+    close(infile);
+  }
+
+  if (proc->outfile != NULL) {
+    int flags = O_WRONLY | O_CREAT;
+
+    if (proc->append) flags |= O_APPEND;
+    else              flags |= O_TRUNC;
+
+    int fd = open(proc->outfile, flags, 0644);
+    if (fd < 0) {
+      perror("open");
+      return true;
+    }
+    outfile = fd;
+  }
+
+  if (outfile != STDOUT_FILENO) {
+    dup2(outfile, STDOUT_FILENO);
+    close(outfile);
+  }
+
+  int ret = search_builtin(proc);
+
+  dup2(in, STDIN_FILENO);
+  dup2(out, STDOUT_FILENO);
+
+  if (in != STDIN_FILENO) close(in);
+  if (out != STDOUT_FILENO) close(out);
+  return ret;
+
+}
 void launch_process(process *proc, pid_t pgid, int infile, int outfile,
                     bool fg) {
+
   pid_t pid = getpid();
 
   if (pgid == 0)
@@ -53,7 +102,15 @@ void launch_process(process *proc, pid_t pgid, int infile, int outfile,
   }
 
   if (proc->outfile != NULL) {
-    outfile = open(proc->outfile, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    int flags = O_WRONLY | O_CREAT;
+    if (proc->append) flags |= O_APPEND;
+    else              flags |= O_TRUNC;
+    int fd = open(proc->outfile, flags, 0644);
+    if (fd < 0) {
+      perror("open");
+      _exit(1);
+    }
+    outfile = fd;
   }
 
   if (outfile != STDOUT_FILENO) {
@@ -106,15 +163,16 @@ void launch_job(job *j, int fg) {
     }
   }
 
+  infile = STDIN_FILENO;
+  outfile = STDOUT_FILENO;
+
   if (!j->first_process->next_process) {
-    if (search_builtin(j->first_process))
+    if (launch_builtin(j->first_process, infile, outfile))
       return;
   }
 
   sigsetmask(sigmask(SIGCHLD));
-
-  infile = STDIN_FILENO;
-  outfile = STDOUT_FILENO;
+;
 
   for (proc = j->first_process; proc != NULL; proc = proc->next_process) {
     if (proc->next_process) {
