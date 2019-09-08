@@ -52,7 +52,7 @@ int search_builtin(process *proc) {
     pinfo(proc);
     return true;
   } else if (strcmp(tokens[0], "nightswatch") == 0) {
-    nightswatch();
+    nightswatch(proc);
     return true;
   } else if (strcmp(tokens[0], "dirty") == 0) {
     dirty();

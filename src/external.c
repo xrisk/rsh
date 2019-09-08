@@ -21,7 +21,8 @@ extern struct state shell_state;
  */
 
 bool launch_builtin(process *proc, int infile, int outfile) {
-   if (proc->infile != NULL) {
+
+  if (proc->infile != NULL) {
     int fd = open(proc->infile, O_RDONLY);
     if (fd < 0) {
       perror("open");
@@ -41,8 +42,10 @@ bool launch_builtin(process *proc, int infile, int outfile) {
   if (proc->outfile != NULL) {
     int flags = O_WRONLY | O_CREAT;
 
-    if (proc->append) flags |= O_APPEND;
-    else              flags |= O_TRUNC;
+    if (proc->append)
+      flags |= O_APPEND;
+    else
+      flags |= O_TRUNC;
 
     int fd = open(proc->outfile, flags, 0644);
     if (fd < 0) {
@@ -62,10 +65,11 @@ bool launch_builtin(process *proc, int infile, int outfile) {
   dup2(in, STDIN_FILENO);
   dup2(out, STDOUT_FILENO);
 
-  if (in != STDIN_FILENO) close(in);
-  if (out != STDOUT_FILENO) close(out);
+  if (in != STDIN_FILENO)
+    close(in);
+  if (out != STDOUT_FILENO)
+    close(out);
   return ret;
-
 }
 void launch_process(process *proc, pid_t pgid, int infile, int outfile,
                     bool fg) {
@@ -103,8 +107,10 @@ void launch_process(process *proc, pid_t pgid, int infile, int outfile,
 
   if (proc->outfile != NULL) {
     int flags = O_WRONLY | O_CREAT;
-    if (proc->append) flags |= O_APPEND;
-    else              flags |= O_TRUNC;
+    if (proc->append)
+      flags |= O_APPEND;
+    else
+      flags |= O_TRUNC;
     int fd = open(proc->outfile, flags, 0644);
     if (fd < 0) {
       perror("open");
@@ -172,7 +178,7 @@ void launch_job(job *j, int fg) {
   }
 
   sigsetmask(sigmask(SIGCHLD));
-;
+  ;
 
   for (proc = j->first_process; proc != NULL; proc = proc->next_process) {
     if (proc->next_process) {

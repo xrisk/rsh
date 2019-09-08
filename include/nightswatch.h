@@ -1,7 +1,9 @@
 #ifndef _NIGHTSWATCH_H
 #define _NIGHTSWATCH_H
 
-void nightswatch();
+#include "main.h"
+
+void nightswatch(process *p);
 void dirty();
 void interrupt();
 

@@ -86,6 +86,11 @@ void nightswatch(process *p) {
 
   char **tokens = p->argv;
 
+  if (p->n_tokens < 4) {
+    fprintf(stderr, "incorrect usage\n");
+    return;
+  }
+
   int t = atoi(tokens[2]);
 
   pid_t fpid;
