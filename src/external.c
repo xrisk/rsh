@@ -44,6 +44,7 @@ void launch_process(process *proc, pid_t pgid, int infile, int outfile,
       perror("open");
       _exit(1);
     }
+    infile = fd;
   }
 
   if (infile != STDIN_FILENO) {
