@@ -69,36 +69,39 @@ int dircmp(const void *a, const void *b) {
   return strcasecmp((*(pair **)a)->first, (*(pair **)b)->first);
 }
 
-void ls(void) {
+void ls(process *p) {
 
   bool all = false, longform = false;
 
-  char **dirs = calloc(shell_state.n_tok, sizeof(char *));
+  char **tokens = p->argv;
+  size_t n_tok = p->n_tokens;
+
+  char **dirs = calloc(n_tok, sizeof(char *));
   size_t n_dirs = 0;
 
-  for (size_t i = 1; i < shell_state.n_tok; ++i) {
-    if (shell_state.tokens[i] == NULL)
+  for (size_t i = 1; i < n_tok; ++i) {
+    if (tokens[i] == NULL)
       continue;
-    if (shell_state.tokens[i][0] == '-') {
-      if (strcmp(shell_state.tokens[i], "-la") == 0) {
+    if (tokens[i][0] == '-') {
+      if (strcmp(tokens[i], "-la") == 0) {
         all = true, longform = true;
-      } else if (strcmp(shell_state.tokens[i], "-al") == 0) {
+      } else if (strcmp(tokens[i], "-al") == 0) {
         all = true, longform = true;
-      } else if (strcmp(shell_state.tokens[i], "-a") == 0) {
+      } else if (strcmp(tokens[i], "-a") == 0) {
         all = true;
-      } else if (strcmp(shell_state.tokens[i], "-l") == 0) {
+      } else if (strcmp(tokens[i], "-l") == 0) {
         longform = true;
       } else {
-        printf("error: unknown option: %s\n", shell_state.tokens[i]);
+        printf("error: unknown option: %s\n", tokens[i]);
       }
     } else {
-      dirs[n_dirs] = strdup(shell_state.tokens[i]);
+      dirs[n_dirs] = strdup(tokens[i]);
       ++n_dirs;
     }
   }
 
   if (n_dirs == 0) {
-    assert(shell_state.n_tok != 0);
+    assert(n_tok != 0);
     dirs[0] = strdup(".");
     ++n_dirs;
   }
@@ -158,7 +161,7 @@ void ls(void) {
       printf("\n");
   }
 
-  for (size_t i = 0; i < shell_state.n_tok; i++) {
+  for (size_t i = 0; i < n_tok; i++) {
     if (dirs[i] != NULL) {
       /*printf("%s\n", dirs[i]);*/
       free(dirs[i]);

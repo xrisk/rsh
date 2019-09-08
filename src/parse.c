@@ -8,88 +8,132 @@
 
 extern struct state shell_state;
 
-void split_into_subcommands(char *line) {
+line *parse_line(char *str) {
+  line *l = calloc(1, sizeof(line));
+  job **head = &(l->first_job);
+  char *ptr;
 
-  char *copy = strdup(line);
-  char *ptr = strtok(copy, ";");
-
-  size_t ntokens = 0;
-  while (ptr != NULL) {
-    ++ntokens;
-    ptr = strtok(NULL, ";");
+  str = strdup(str);
+  while ((ptr = strsep(&str, ";")) != NULL) {
+    *head = parse_job(ptr);
+    head = &((*head)->next_job);
   }
-
-  strcpy(copy, line);
-  ptr = strtok(copy, ";");
-
-  shell_state.n_subcommands = ntokens;
-  shell_state.subcommands = malloc(sizeof(char *) * ntokens);
-
-  size_t index = 0;
-  while (ptr != NULL) {
-    shell_state.subcommands[index] = calloc(strlen(ptr) + 1, sizeof(char));
-    strcpy(shell_state.subcommands[index], ptr);
-    ptr = strtok(NULL, ";");
-    index++;
-  }
-
-  if (copy != NULL) {
-    free(copy);
-    copy = NULL;
-  }
+  free(str);
+  return l;
 }
 
-void parse_subcommand(char *subcommand) {
+job *parse_job(char *str) {
+  job *j = calloc(1, sizeof(job));
+  process **head = &(j->first_process);
+  char *ptr;
 
-  shell_state.bg = false;
+  str = strdup(str);
 
-  long len = strlen(subcommand);
-  for (long i = len - 1; i >= 0; --i) {
-    char c = subcommand[i];
-    if (c == '&') {
-      shell_state.bg = true;
+  j->fg = true;
+  int idx = strlen(str) - 1;
+  while (idx >= 0) {
+    if (str[idx] == '&') {
+      j->fg = false;
+      str[idx] = '\0';
+    } else if (!(str[idx] == ' ' || str[idx] == '\t'))
       break;
-    } else if (!(c == '\t' || c == ' ')) {
-      break;
-    }
+    idx--;
   }
 
-  char *copy = strdup(subcommand);
-  char *ptr = strtok(copy, " \t");
-
-  size_t ntokens = 0;
-  while (ptr != NULL) {
-    if (strcmp(ptr, "&") != 0) {
-      ++ntokens;
-    }
-    ptr = strtok(NULL, " \t");
+  while ((ptr = strsep(&str, "|")) != NULL) {
+    *head = parse_process(ptr);
+    head = &((*head)->next_process);
   }
 
-  strcpy(copy, subcommand);
-  ptr = strtok(copy, " \t");
+  free(str);
+  return j;
+}
 
-  shell_state.n_tok = ntokens;
-  shell_state.tokens = calloc(ntokens + 1, sizeof(char *)); // 1 null ptr
+process *parse_process(char *str) {
+  process *p = calloc(1, sizeof(process));
+  p->infile = NULL;
+  p->outfile = NULL;
+  p->append = false;
+  char *ptr;
+  int n_tokens = 32;
+  char **argv = calloc(32, sizeof(char *));
+  int cur_tok = 0;
 
-  size_t index = 0;
-  while (ptr != NULL) {
+  str = strdup(str);
+  while ((ptr = strsep(&str, " \t")) != NULL) {
+    if (ptr[0] == '\0')
+      continue;
 
-    if (strcmp(ptr, "&") == 0) {
-      ptr = strtok(NULL, " \t");
+    if (strncmp(ptr, ">>", 2) == 0) {
+      if (strlen(ptr) > 2) {
+        p->outfile = strdup(ptr + 2);
+        p->append = true;
+      } else {
+        while (1) {
+          ptr = strsep(&str, " \t");
+          if (ptr == NULL || ptr[0] != '\0')
+            break;
+        }
+        if (ptr == NULL) {
+          fprintf(stderr, "missing file after >>");
+          exit(1);
+        }
+        p->outfile = strdup(ptr);
+        p->append = true;
+      }
+      continue;
+    } else if (ptr[0] == '>') {
+      if (strlen(ptr) != 1) {
+        p->outfile = strdup(ptr + 1);
+      } else {
+        while (1) {
+          ptr = strsep(&str, " \t");
+          if (ptr == NULL || ptr[0] != '\0')
+            break;
+        }
+        if (ptr == NULL) {
+          fprintf(stderr, "missing file after >");
+          exit(1);
+        }
+        p->outfile = strdup(ptr);
+      }
+      continue;
+    } else if (ptr[0] == '<') {
+      if (strlen(ptr) != 1) {
+        p->infile = strdup(ptr + 1);
+      } else {
+        while (1) {
+          ptr = strsep(&str, " \t");
+          if (ptr == NULL || ptr[0] != '\0')
+            break;
+        }
+        if (ptr == NULL) {
+          fprintf(stderr, "missing file after <");
+          exit(1);
+        }
+        p->infile = strdup(ptr);
+      }
       continue;
     }
-    shell_state.tokens[index] = calloc(strlen(ptr) + 1, sizeof(char));
-    strcpy(shell_state.tokens[index], ptr);
-    size_t len = strlen(shell_state.tokens[index]);
-    if (shell_state.tokens[index][len - 1] == '&') {
-      shell_state.tokens[index][len - 1] = '\0';
+
+    if (cur_tok == n_tokens) {
+      n_tokens *= 2;
+      argv = realloc(argv, sizeof(char *) * n_tokens);
     }
-    ptr = strtok(NULL, " \t");
-    index++;
+
+    argv[cur_tok] = strdup(ptr);
+    cur_tok++;
   }
 
-  if (copy != NULL) {
-    free(copy);
-    copy = NULL;
+  if (cur_tok == n_tokens) {
+    argv = realloc(argv, sizeof(char *) * (n_tokens + 1));
   }
+
+  argv[cur_tok + 1] = NULL;
+
+  p->n_tokens = cur_tok;
+  p->argv = argv;
+
+  free(str);
+  return p;
 }

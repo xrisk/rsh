@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #define _GNU_SOURCE
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,89 +10,138 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "builtin.h"
 #include "external.h"
 #include "main.h"
+#include "util.h"
 
 extern struct state shell_state;
 
-int do_background_command(char **tokens) {
+/* https://www.gnu.org/software/libc/manual/html_node/Launching-Jobs.html#Launching-Jobs
+ */
+void launch_process(process *proc, pid_t pgid, int infile, int outfile,
+                    bool fg) {
+  pid_t pid = getpid();
 
-  pid_t forkPID;
+  if (pgid == 0)
+    pgid = pid;
+  setpgid(pid, pgid);
 
-#if DEBUG
-  fprintf(stderr, "executing background\n");
-#endif
+  if (fg) {
+    tcsetpgrp(shell_state.shell_terminal, pgid);
+  }
 
-  if ((forkPID = fork()) < 0) {
-    perror("failed to fork");
-    return false;
-  } else if (forkPID == 0) {
+  signal(SIGINT, SIG_DFL);
+  signal(SIGQUIT, SIG_DFL);
+  signal(SIGTSTP, SIG_DFL);
+  signal(SIGTTIN, SIG_DFL);
+  signal(SIGTTOU, SIG_DFL);
+  signal(SIGCHLD, SIG_DFL);
 
-    pid_t myPID = getpid();
-    setpgid(myPID, myPID);
+  if (proc->infile != NULL) {
+    int fd = open(proc->infile, O_RDONLY);
+    if (fd < 0) {
+      perror("open");
+      _exit(1);
+    }
+  }
 
-    /* https://www.gnu.org/software/libc/manual/html_node/Initializing-the-Shell.html#Initializing-the-Shell
-     */
+  if (infile != STDIN_FILENO) {
+    dup2(infile, STDIN_FILENO);
+    close(infile);
+  }
 
-    signal(SIGINT, SIG_DFL);
-    signal(SIGQUIT, SIG_DFL);
-    signal(SIGTSTP, SIG_DFL);
-    signal(SIGTTIN, SIG_DFL);
-    signal(SIGTTOU, SIG_DFL);
-    execvp(tokens[0], tokens);
+  if (proc->outfile != NULL) {
+    outfile = open(proc->outfile, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+  }
+
+  if (outfile != STDOUT_FILENO) {
+    dup2(outfile, STDOUT_FILENO);
+    close(outfile);
+  }
+
+  if (search_builtin(proc))
+    _exit(0);
+
+  if (execvp(proc->argv[0], proc->argv) < 0) {
     perror("execvp");
-
-    return QUIT_NOW;
-  } else {
-    setpgid(forkPID, forkPID);
-    return true;
+    _exit(1);
   }
 }
 
-int search_external_cmd(char **tokens, bool bg) {
+void put_job_to_fg(job *j, int cont) {
 
-  if (bg)
-    return do_background_command(tokens);
-
-  pid_t forkPID;
-
-  forkPID = fork();
-
-  if (forkPID == 0) {
-
-    pid_t myPID = getpid();
-    setpgid(myPID, myPID);
-    tcsetpgrp(shell_state.shell_terminal, myPID);
-
-    /*https://www.gnu.org/software/libc/manual/html_node/Initializing-the-Shell.html#Initializing-the-Shell*/
-
-    signal(SIGINT, SIG_DFL);
-    signal(SIGQUIT, SIG_DFL);
-    signal(SIGTSTP, SIG_DFL);
-    signal(SIGTTIN, SIG_DFL);
-    signal(SIGTTOU, SIG_DFL);
-
-#if DEBUG
-    printf("executing %s\n", tokens[0]);
-#endif
-
-    execvp(tokens[0], tokens);
-    perror("execvp");
-    return QUIT_NOW;
-
-  } else {
-    setpgid(forkPID, forkPID);
-    shell_state.fg_pid = forkPID;
-
-    if (!bg) {
-      shell_state.shell_pgid = tcsetpgrp(shell_state.shell_terminal, forkPID);
-    }
-
-    while (shell_state.fg_pid != -1) {
-    }
-
-    tcsetpgrp(shell_state.shell_terminal, getpid());
+  tcsetpgrp(shell_state.shell_terminal, j->pgid);
+  if (cont) {
+    kill(j->pgid, SIGCONT);
   }
 
-  return true;
+  wait_for_job(j);
+  tcsetpgrp(shell_state.shell_terminal, shell_state.shell_pgid);
+}
+
+void put_job_to_bg(job *j, int cont) {
+  if (cont)
+    kill(j->pgid, SIGCONT);
+}
+
+void launch_job(job *j, int fg) {
+  int mypipe[2], infile, outfile;
+  pid_t pid;
+
+  process *proc;
+
+  for (proc = j->first_process; proc; proc = proc->next_process) {
+    if (proc->n_tokens == 0) {
+      fprintf(stderr, "empty process in job!\n");
+      return;
+    }
+  }
+
+  if (!j->first_process->next_process) {
+    if (search_builtin(j->first_process))
+      return;
+  }
+
+  sigsetmask(sigmask(SIGCHLD));
+
+  infile = STDIN_FILENO;
+  outfile = STDOUT_FILENO;
+
+  for (proc = j->first_process; proc != NULL; proc = proc->next_process) {
+    if (proc->next_process) {
+
+      pipe(mypipe);
+      outfile = mypipe[1];
+    }
+
+    switch (pid = fork()) {
+    case -1:
+      perror("fork");
+      exit(1);
+    case 0:
+      launch_process(proc, j->pgid, infile, outfile, fg);
+      break;
+    default:
+      if (j->pgid == 0)
+        j->pgid = pid;
+      /* printf("setpgid(%d, %d)\n", proc->pid, j->pgid); */
+      proc->pid = pid;
+      setpgid(proc->pid, j->pgid);
+      break;
+    }
+    if (infile != STDIN_FILENO)
+      close(infile);
+    if (outfile != STDOUT_FILENO)
+      close(outfile);
+    infile = mypipe[0];
+  }
+
+  insert_job(j);
+  sigsetmask(0);
+
+  if (fg) {
+    put_job_to_fg(j, 0);
+  } else
+    put_job_to_bg(j, 0);
 }

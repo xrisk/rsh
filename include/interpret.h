@@ -1,6 +1,8 @@
 #ifndef INTERPRET_H
 #define INTERPRET_H
 
-int interpret(void);
+#include "main.h"
+
+void interpret(line *inp);
 
 #endif

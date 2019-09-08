@@ -1,9 +1,10 @@
 #ifndef _EXTERNAL_H
 #define _EXTERNAL_H
 
+#include "main.h"
 #include <stdbool.h>
 #include <stddef.h>
 
-int search_external_cmd(char **tokens, bool bg);
+void launch_job(job *j, int fg);
 
 #endif

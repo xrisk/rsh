@@ -93,13 +93,13 @@ void disp_pinfo(pid_t pid) {
   fclose(f);
 }
 
-void pinfo() {
+void pinfo(process *p) {
 
   pid_t pid;
-  if (shell_state.n_tok == 1)
+  if (p->n_tokens == 1)
     pid = getpid();
   else
-    pid = atoi(shell_state.tokens[1]);
+    pid = atoi(p->argv[1]);
 
   disp_pinfo(pid);
 }

@@ -1,4 +1,3 @@
-
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -14,40 +13,9 @@
 #include "main.h"
 #include "parse.h"
 #include "prompt.h"
+#include "util.h"
 
 struct state shell_state;
-
-#define LINE_SIZE (1 * 1024 * 1024)
-/* 1M line size seems good */
-
-void free_tokens(void) {
-  if (shell_state.tokens != NULL) {
-    for (size_t i = 0; i < shell_state.n_tok; ++i) {
-      if (shell_state.tokens[i] != NULL) {
-        free(shell_state.tokens[i]);
-        shell_state.tokens[i] = NULL;
-      }
-    }
-    free(shell_state.tokens);
-    shell_state.tokens = NULL;
-    shell_state.n_tok = 0;
-  }
-}
-
-void free_subcommands(void) {
-  if (shell_state.subcommands != NULL) {
-    for (size_t i = 0; i < shell_state.n_subcommands; ++i) {
-      if (shell_state.subcommands[i] != NULL) {
-        free(shell_state.subcommands[i]);
-        shell_state.subcommands[i] = NULL;
-      }
-    }
-    free(shell_state.subcommands);
-    shell_state.subcommands = NULL;
-    shell_state.n_subcommands = 0;
-  }
-  shell_state.bg = false;
-}
 
 void set_homedir() {
   char *homedir = get_cwd();
@@ -55,38 +23,16 @@ void set_homedir() {
 }
 
 void sigchld_handler() {
+  pid_t pid;
   int status;
-  bool f = false;
+  pid = waitpid(-1, &status, WNOHANG | WUNTRACED);
+  update_status(pid, status);
+}
 
-  do {
-    f = false;
-    pid_t ch = waitpid(-1, &status, WNOHANG);
-    if (ch == -1) {
-      return;
-    }
-    if (ch == 0)
-      return;
-
-    if (ch == shell_state.fg_pid) {
-      shell_state.fg_pid = -1;
-#ifdef DEBUG
-      printf("fg ended\n");
-#endif
-
-#ifndef DEBUG
-      continue;
-#endif
-    }
-
-    f = true;
-    fprintf(stderr, "pid %d exited", ch);
-    if (WIFEXITED(status))
-      fprintf(stderr, " with return status %d\n", WEXITSTATUS(status));
-    else if (WIFSIGNALED(status))
-      fprintf(stderr, " because of signal %d\n", WTERMSIG(status));
-    else
-      fprintf(stderr, " abnormally reason unknown\n");
-  } while (f);
+void cleanup() {
+  persist_history();
+  free_history();
+  tcsetattr(shell_state.shell_terminal, TCSADRAIN, &shell_state.shell_tmodes);
 }
 
 void initialize() {
@@ -98,9 +44,11 @@ void initialize() {
 
   if (shell_is_interactive) {
 
-    while (tcgetpgrp(shell_state.shell_terminal) !=
-           (shell_state.shell_pgid = getpgrp()))
-      kill(-shell_state.shell_pgid, SIGTTIN);
+    /* while (tcgetpgrp(shell_state.shell_terminal) != */
+    /*        (shell_state.shell_pgid = getpgrp())) { */
+    /*   printf("%d\n", tcgetpgrp(shell_state.shell_terminal)); */
+    /*   kill(-shell_state.shell_pgid, SIGTTIN); */
+    /* } */
 
     signal(SIGINT, SIG_IGN);
     signal(SIGQUIT, SIG_IGN);
@@ -114,19 +62,20 @@ void initialize() {
       exit(EXIT_FAILURE);
     }
 
+    shell_state.shell_pgid = shell_pgid;
+
     tcsetpgrp(shell_state.shell_terminal, shell_pgid);
     tcgetattr(shell_state.shell_terminal, &shell_state.shell_tmodes);
 
     initialize_history();
+
+    signal(SIGCHLD, sigchld_handler);
+
+    atexit(cleanup);
   } else {
     fprintf(stderr, "stdin is not a tty; exiting!\n");
     exit(1);
   }
-}
-
-void cleanup() {
-  free_history();
-  tcsetattr(shell_state.shell_terminal, TCSADRAIN, &shell_state.shell_tmodes);
 }
 
 void glob(char **ptr_to_line) {
@@ -138,6 +87,9 @@ void glob(char **ptr_to_line) {
     if (line[i] == '~')
       tilde_count++;
   }
+
+  if (tilde_count == 0)
+    return;
   char *new =
       calloc(strlen(line) + strlen(shell_state.homedir) * tilde_count + 1,
              sizeof(char));
@@ -157,9 +109,29 @@ void glob(char **ptr_to_line) {
   free(new);
 }
 
+void debug_print(job *j) {
+  if (j) {
+    process *p = j->first_process;
+    while (p) {
+      for (size_t i = 0; i < p->n_tokens; ++i) {
+        printf("%s ", p->argv[i]);
+      }
+      if (p->outfile)
+        printf((p->append) ? ">>%s " : ">%s ", p->outfile);
+      if (p->infile)
+        printf("<%s ", p->infile);
+      printf("|");
+      p = p->next_process;
+    }
+  }
+  printf("\n");
+}
+
+void atexit_handler() { persist_history(); }
+
 int main() {
 
-  char *line = NULL;
+  char *str = NULL;
   size_t line_sz = 0;
 
   initialize();
@@ -168,41 +140,32 @@ int main() {
 
   while (1) {
     show_prompt();
-
-    signal(SIGCHLD, sigchld_handler);
-    if (getline(&line, &line_sz, stdin) < 0) {
+    /* fprintf(stderr, "%d %d\n", tcgetpgrp(shell_state.shell_terminal), */
+    /* getpgid(0)); */
+    if (getline(&str, &line_sz, stdin) < 0) {
       if (errno == EAGAIN)
         continue;
       goto end;
     }
 
-    line[strcspn(line, "\n")] = '\0';
-    glob(&line);
+    str[strcspn(str, "\n")] = '\0';
+    glob(&str);
 
-    split_into_subcommands(line);
+    line *input_line = parse_line(str);
 
-    for (size_t i = 0; i < shell_state.n_subcommands; ++i) {
-      parse_subcommand(shell_state.subcommands[i]);
-      if (interpret() == QUIT_NOW) {
-        goto end;
-      }
-      free_tokens();
-    }
+    interpret(input_line);
 
-    add_history_entry(line);
-    free_subcommands();
+    add_history_entry(str);
   }
 
 end:
-  free_tokens();
-  free_subcommands();
-  persist_history();
+  /* free_tokens(); */
+  /* free_subcommands(); */
 
-  if (line != NULL) {
-    free(line);
-    line = NULL;
+  if (str != NULL) {
+    free(str);
+    str = NULL;
   }
 
-  cleanup();
   return 0;
 }

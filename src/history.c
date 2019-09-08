@@ -42,11 +42,11 @@ void add_history_entry(char *line) {
   shell_state.head = new_index;
 }
 
-void show_history() {
+void show_history(process *p) {
   int idx = shell_state.head;
   int ctr = 1;
 
-  int n = shell_state.n_tok > 1 ? atoi(shell_state.tokens[1]) : 10;
+  int n = p->n_tokens > 1 ? atoi(p->argv[1]) : 10;
 
   do {
     if (shell_state.history[idx] == NULL)

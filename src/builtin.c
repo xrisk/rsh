@@ -15,14 +15,17 @@
 
 extern struct state shell_state;
 
-int search_builtin(char **tokens, size_t ntok) {
+int search_builtin(process *proc) {
+
+  char **tokens = proc->argv;
+  size_t ntok = proc->n_tokens;
   if (ntok == 0)
     return true;
 
   if (strcmp(tokens[0], "cd") == 0) {
     char *cdpath;
-    if (shell_state.n_tok > 1) {
-      cdpath = shell_state.tokens[1];
+    if (proc->n_tokens > 1) {
+      cdpath = tokens[1];
     } else {
       cdpath = shell_state.homedir;
     }
@@ -38,14 +41,14 @@ int search_builtin(char **tokens, size_t ntok) {
     return true;
   } else if (strcmp(tokens[0], "echo") == 0) {
     for (size_t it = 1; it < ntok; ++it)
-      printf("%s ", shell_state.tokens[it]);
+      printf("%s ", tokens[it]);
     printf("\n");
     return true;
   } else if (strcmp(tokens[0], "ls") == 0) {
-    ls();
+    ls(proc);
     return true;
   } else if (strcmp(tokens[0], "pinfo") == 0) {
-    pinfo();
+    pinfo(proc);
     return true;
   } else if (strcmp(tokens[0], "nightswatch") == 0) {
     nightswatch();
@@ -60,7 +63,7 @@ int search_builtin(char **tokens, size_t ntok) {
     show_history();
     return true;
   } else if (strcmp(tokens[0], "exit") == 0) {
-    return QUIT_NOW;
+    exit(0);
   }
 
   return false;

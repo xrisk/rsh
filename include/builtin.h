@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int search_builtin(char **tokens, size_t ntok);
+#include "main.h"
+
+int search_builtin(process *proc);
 
 #endif

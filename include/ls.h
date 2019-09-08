@@ -1,6 +1,8 @@
 #ifndef _LS_H
 #define _LS_H
 
-void ls(void);
+#include "main.h"
+
+void ls(process *p);
 
 #endif

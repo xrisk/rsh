@@ -82,9 +82,11 @@ void dirty() {
     fclose(f);
 }
 
-void nightswatch() {
+void nightswatch(process *p) {
 
-  int t = atoi(shell_state.tokens[2]);
+  char **tokens = p->argv;
+
+  int t = atoi(tokens[2]);
 
   pid_t fpid;
 
@@ -101,13 +103,13 @@ void nightswatch() {
     bool header = 1;
 
     while (1) {
-      if (strcmp(shell_state.tokens[3], "interrupts") == 0) {
+      if (strcmp(tokens[3], "interrupts") == 0) {
         interrupt(header);
         header = 0;
-      } else if (strcmp(shell_state.tokens[3], "dirty") == 0)
+      } else if (strcmp(tokens[3], "dirty") == 0)
         dirty();
       else
-        printf("unknown operation %s\n", shell_state.tokens[3]);
+        printf("unknown operation %s\n", tokens[3]);
       sleep(t);
     }
 
