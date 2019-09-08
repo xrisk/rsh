@@ -77,8 +77,12 @@ void put_job_to_fg(job *j, int cont) {
     kill(j->pgid, SIGCONT);
   }
 
+  struct termios termattr;
+  tcgetattr(shell_state.shell_terminal, &termattr);
+
   wait_for_job(j);
   tcsetpgrp(shell_state.shell_terminal, shell_state.shell_pgid);
+  tcsetattr(shell_state.shell_terminal, TCSADRAIN, &termattr);
 }
 
 void put_job_to_bg(job *j, int cont) {

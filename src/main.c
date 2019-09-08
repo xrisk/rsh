@@ -109,24 +109,6 @@ void glob(char **ptr_to_line) {
   free(new);
 }
 
-void debug_print(job *j) {
-  if (j) {
-    process *p = j->first_process;
-    while (p) {
-      for (size_t i = 0; i < p->n_tokens; ++i) {
-        printf("%s ", p->argv[i]);
-      }
-      if (p->outfile)
-        printf((p->append) ? ">>%s " : ">%s ", p->outfile);
-      if (p->infile)
-        printf("<%s ", p->infile);
-      printf("|");
-      p = p->next_process;
-    }
-  }
-  printf("\n");
-}
-
 void atexit_handler() { persist_history(); }
 
 int main() {

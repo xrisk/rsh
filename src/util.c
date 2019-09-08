@@ -7,6 +7,27 @@
 
 extern struct state shell_state;
 
+void debug_print(job *j) {
+  if (j) {
+    process *p = j->first_process;
+    while (p) {
+      printf("(%s) ", (p->stopped) ? "Stopped" : "Running");
+      for (size_t i = 0; i < p->n_tokens; ++i) {
+        printf("%s ", p->argv[i]);
+      }
+      if (p->outfile)
+        printf((p->append) ? ">>%s " : ">%s ", p->outfile);
+      if (p->infile)
+        printf("<%s ", p->infile);
+      printf(" [%d] ", p->pid);
+      if (p->next_process)
+        printf("|");
+      p = p->next_process;
+    }
+  }
+  printf("\n");
+}
+
 void insert_job(job *j) {
   if (j == NULL)
     return;
@@ -16,13 +37,47 @@ void insert_job(job *j) {
   shell_state.job_table = ent;
 }
 
+bool check_stopped(job *j) {
+  for (process *p = j->first_process; p; p = p->next_process) {
+    if (!p->stopped)
+      return false;
+  }
+  return true;
+}
+
+bool check_completed(job *j) {
+  for (process *p = j->first_process; p; p = p->next_process) {
+    if (!p->completed)
+      return false;
+  }
+  return true;
+}
+
+void prune_jobs() {
+  job_entry *j = shell_state.job_table;
+  job_entry *jlast = NULL;
+  while (j) {
+    if (check_completed(j->job)) {
+      if (jlast == NULL)
+        shell_state.job_table = j;
+      else
+        jlast->next = j->next;
+    }
+    j = j->next;
+  }
+}
+
 void print_job_table() {
+  prune_jobs();
   job_entry *cur = shell_state.job_table;
-  printf("job table: ");
+  printf("job table: \n");
+  int idx = 1;
   while (cur) {
+    printf("[%d] ", idx++);
     debug_print(cur->job);
     cur = cur->next;
   }
+  printf("\n");
 }
 
 /* status is obtained from waitpid */
@@ -32,21 +87,25 @@ int update_status(pid_t pid, int status) {
   else if (pid < 0)
     return -1;
 
-  for (job_entry *j = shell_state.job_table; j; j = j->next) {
+  job_entry *j;
+
+  for (j = shell_state.job_table; j; j = j->next) {
     for (process *proc = j->job->first_process; proc;
          proc = proc->next_process) {
       if (proc->pid == pid) {
         proc->status = status;
-        if (WIFSTOPPED(status))
+        if (WIFSTOPPED(status)) {
+          j->job->fg = false;
           proc->stopped = 1;
-        else {
+        } else {
           proc->completed = 1;
-
           if (!j->job->fg) {
-            fprintf(stderr, "%s with pid %d exited\n", proc->argv[0],
-                    proc->pid);
             if (WIFSIGNALED(status))
-              fprintf(stderr, "pid %d terminated by signal\n", proc->pid);
+              fprintf(stderr, "%s with pid %d terminated by signal\n",
+                      proc->argv[0], proc->pid);
+            else
+              fprintf(stderr, "%s with pid %d exited\n", proc->argv[0],
+                      proc->pid);
           }
         }
         return 0;
@@ -57,15 +116,6 @@ int update_status(pid_t pid, int status) {
 }
 
 void wait_for_job(job *j) {
-  while (1) {
-    int fl = 0;
-    for (process *p = j->first_process; p; p = p->next_process) {
-      if (!(p->stopped || p->completed)) {
-        fl = 1;
-        break;
-      }
-    }
-    if (!fl)
-      break;
-  }
+  while (!(check_stopped(j) || check_completed(j)))
+    ;
 }

@@ -12,6 +12,7 @@
 #include "nightswatch.h"
 #include "pinfo.h"
 #include "prompt.h"
+#include "util.h"
 
 extern struct state shell_state;
 
@@ -64,6 +65,9 @@ int search_builtin(process *proc) {
     return true;
   } else if (strcmp(tokens[0], "exit") == 0) {
     exit(0);
+  } else if (strcmp(tokens[0], "jobs") == 0) {
+    print_job_table();
+    return true;
   }
 
   return false;
