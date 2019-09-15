@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "builtin.h"
+#include "env.h"
 #include "history.h"
 #include "ls.h"
 #include "main.h"
@@ -36,39 +37,34 @@ int search_builtin(process *proc) {
       get_cwd();
       // update shell vars
     }
-    return true;
   } else if (strcmp(tokens[0], "pwd") == 0) {
     printf("%s\n", shell_state.cwd);
-    return true;
   } else if (strcmp(tokens[0], "echo") == 0) {
     for (size_t it = 1; it < ntok; ++it)
       printf("%s ", tokens[it]);
     printf("\n");
-    return true;
   } else if (strcmp(tokens[0], "ls") == 0) {
     ls(proc);
-    return true;
   } else if (strcmp(tokens[0], "pinfo") == 0) {
     pinfo(proc);
-    return true;
   } else if (strcmp(tokens[0], "nightswatch") == 0) {
     nightswatch(proc);
-    return true;
   } else if (strcmp(tokens[0], "dirty") == 0) {
     dirty();
-    return true;
   } else if (strcmp(tokens[0], "interrupt") == 0) {
     interrupt();
-    return true;
   } else if (strcmp(tokens[0], "history") == 0) {
     show_history();
-    return true;
   } else if (strcmp(tokens[0], "exit") == 0) {
     exit(0);
   } else if (strcmp(tokens[0], "jobs") == 0) {
     print_job_table();
-    return true;
-  }
+  } else if (strcmp(tokens[0], "setenv") == 0) {
+    set_environ(proc);
+  } else if (strcmp(tokens[0], "unsetenv") == 0) {
+    unset_environ(proc);
+  } else
+    return false;
 
-  return false;
+  return true;
 }
