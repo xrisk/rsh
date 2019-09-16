@@ -25,7 +25,6 @@ void debug_print(job *j) {
       p = p->next_process;
     }
   }
-  printf("\n");
 }
 
 void insert_job(job *j) {
@@ -75,9 +74,9 @@ void print_job_table() {
   while (cur) {
     printf("[%d] ", idx++);
     debug_print(cur->job);
+    printf("\n");
     cur = cur->next;
   }
-  printf("\n");
 }
 
 /* status is obtained from waitpid */
