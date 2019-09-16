@@ -1,10 +1,12 @@
 #ifndef _HISTORY_H
 #define _HISTORY_H
 
-void add_history_entry();
-void show_history();
-void initialize_history();
-void free_history();
-void persist_history();
+#include "main.h"
+
+void add_history_entry(char *line);
+void show_history(process *p);
+void initialize_history(void);
+void free_history(void);
+void persist_history(void);
 
 #endif
