@@ -1,2 +1,2 @@
 void show_prompt(void);
-char *get_cwd();
+char *get_cwd(void);
