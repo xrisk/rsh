@@ -72,8 +72,9 @@ void prune_jobs() {
         shell_state.job_table = j->next;
       else
         jlast->next = j->next;
+    } else {
+      jlast = j;
     }
-    jlast = j;
     j = j->next;
   }
 }
