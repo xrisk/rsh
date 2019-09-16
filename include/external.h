@@ -6,5 +6,7 @@
 #include <stddef.h>
 
 void launch_job(job *j, int fg);
+void foreground(process *proc);
+void background(process *proc);
 
 #endif

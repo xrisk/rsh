@@ -59,7 +59,7 @@ void prune_jobs() {
   while (j) {
     if (check_completed(j->job)) {
       if (jlast == NULL)
-        shell_state.job_table = j;
+        shell_state.job_table = j->next;
       else
         jlast->next = j->next;
     }
@@ -70,7 +70,6 @@ void prune_jobs() {
 void print_job_table() {
   prune_jobs();
   job_entry *cur = shell_state.job_table;
-  printf("job table: \n");
   int idx = 1;
   while (cur) {
     printf("[%d] ", idx++);

@@ -217,3 +217,74 @@ void launch_job(job *j, int fg) {
   } else
     put_job_to_bg(j, 0);
 }
+
+void background(process *proc) {
+  if (proc->n_tokens != 2) {
+    fprintf(stderr, "usage: bg <jobNumber>\n");
+    return;
+  }
+
+  int req = strtol(proc->argv[1], NULL, 10);
+  if (req == 0) {
+    fprintf(stderr, "invalid job number\n");
+    return;
+  }
+
+  int idx = 1;
+  job_entry *cur = shell_state.job_table;
+  while (cur != NULL && req != idx) {
+    cur = cur->next;
+    idx++;
+  }
+
+  if (!cur) {
+    fprintf(stderr, "error: no such job\n");
+    return;
+  }
+
+  if (!check_stopped(cur->job)) {
+    fprintf(stderr, "job already running\n");
+    return;
+  }
+
+  for (process *tmp = cur->job->first_process; tmp; tmp = tmp->next_process) {
+    tmp->stopped = 0;
+  }
+
+  put_job_to_bg(cur->job, 1);
+}
+
+void foreground(process *proc) {
+  if (proc->n_tokens != 2) {
+    fprintf(stderr, "usage: fg <jobNumber>\n");
+    return;
+  }
+  int req = strtol(proc->argv[1], NULL, 10);
+  if (req == 0) {
+    fprintf(stderr, "invalid job number\n");
+    return;
+  }
+  int idx = 1;
+  job_entry *cur = shell_state.job_table;
+  while (cur != NULL && req != idx) {
+    cur = cur->next;
+    idx++;
+  }
+
+  if (!cur) {
+    fprintf(stderr, "error: no such job\n");
+    return;
+  }
+
+  if (!check_stopped(cur->job)) {
+    fprintf(stderr, "job already running\n");
+    return;
+  }
+
+  for (process *tmp = cur->job->first_process; tmp; tmp = tmp->next_process) {
+    tmp->stopped = 0;
+  }
+
+  cur->job->fg = true;
+  put_job_to_fg(cur->job, 1);
+}

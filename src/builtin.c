@@ -7,6 +7,7 @@
 
 #include "builtin.h"
 #include "env.h"
+#include "external.h"
 #include "history.h"
 #include "ls.h"
 #include "main.h"
@@ -63,6 +64,10 @@ int search_builtin(process *proc) {
     set_environ(proc);
   } else if (strcmp(tokens[0], "unsetenv") == 0) {
     unset_environ(proc);
+  } else if (strcmp(tokens[0], "fg") == 0) {
+    foreground(proc);
+  } else if (strcmp(tokens[0], "bg") == 0) {
+    background(proc);
   } else
     return false;
 
