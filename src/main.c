@@ -24,9 +24,11 @@ void set_homedir() {
 
 void sigchld_handler() {
   pid_t pid;
-  int status;
-  pid = waitpid(-1, &status, WNOHANG | WUNTRACED);
-  update_status(pid, status);
+  do {
+    int status;
+    pid = waitpid(-1, &status, WNOHANG | WUNTRACED);
+    update_status(pid, status);
+  } while (pid > 0);
 }
 
 void cleanup() {
