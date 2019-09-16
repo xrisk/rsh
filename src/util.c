@@ -63,6 +63,7 @@ void prune_jobs() {
       else
         jlast->next = j->next;
     }
+    jlast = j;
     j = j->next;
   }
 }
