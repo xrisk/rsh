@@ -14,6 +14,11 @@ extern struct state shell_state;
 
 void interrupt(int header) {
 
+#ifdef __APPLE__
+  fprintf(stderr, "interrupt not supported on macOS\n");
+  return;
+#endif
+
   FILE *f = fopen("/proc/interrupts", "r");
   long len = 1024, idx = 0;
   char *buffer = calloc(len, sizeof(char));
@@ -49,6 +54,10 @@ void interrupt(int header) {
 }
 
 void dirty() {
+#ifdef __APPLE__
+  fprintf(stderr, "dirty not supported on macOS\n");
+  return;
+#endif
 
   FILE *f = fopen("/proc/meminfo", "r");
   long len = 4096, idx = 0;

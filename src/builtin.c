@@ -53,8 +53,8 @@ int search_builtin(process *proc) {
     nightswatch(proc);
   } else if (strcmp(tokens[0], "dirty") == 0) {
     dirty();
-  } else if (strcmp(tokens[0], "interrupt") == 0) {
-    interrupt();
+  } else if (strcmp(tokens[0], "interrupts") == 0) {
+    interrupt(0);
   } else if (strcmp(tokens[0], "history") == 0) {
     show_history(proc);
   } else if (strcmp(tokens[0], "quit") == 0 || strcmp(tokens[0], "exit") == 0) {
