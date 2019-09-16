@@ -9,6 +9,7 @@
 #include "env.h"
 #include "external.h"
 #include "history.h"
+#include "kill.h"
 #include "ls.h"
 #include "main.h"
 #include "nightswatch.h"
@@ -68,6 +69,10 @@ int search_builtin(process *proc) {
     foreground(proc);
   } else if (strcmp(tokens[0], "bg") == 0) {
     background(proc);
+  } else if (strcmp(tokens[0], "kjob") == 0) {
+    kjob(proc);
+  } else if (strcmp(tokens[0], "overkill") == 0) {
+    overkill(proc);
   } else
     return false;
 

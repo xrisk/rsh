@@ -230,12 +230,7 @@ void background(process *proc) {
     return;
   }
 
-  int idx = 1;
-  job_entry *cur = shell_state.job_table;
-  while (cur != NULL && req != idx) {
-    cur = cur->next;
-    idx++;
-  }
+  job_entry *cur = get_job(req);
 
   if (!cur) {
     fprintf(stderr, "error: no such job\n");
@@ -264,12 +259,8 @@ void foreground(process *proc) {
     fprintf(stderr, "invalid job number\n");
     return;
   }
-  int idx = 1;
-  job_entry *cur = shell_state.job_table;
-  while (cur != NULL && req != idx) {
-    cur = cur->next;
-    idx++;
-  }
+
+  job_entry *cur = get_job(req);
 
   if (!cur) {
     fprintf(stderr, "error: no such job\n");
