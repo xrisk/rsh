@@ -127,9 +127,13 @@ int main() {
     /* fprintf(stderr, "%d %d\n", tcgetpgrp(shell_state.shell_terminal), */
     /* getpgid(0)); */
     if (getline(&str, &line_sz, stdin) < 0) {
-      if (errno == EAGAIN)
+      if (feof(stdin)) {
+        clearerr(stdin);
+        printf("\n");
         continue;
-      goto end;
+      }
+      perror("getline");
+      exit(1);
     }
 
     str[strcspn(str, "\n")] = '\0';
@@ -141,10 +145,6 @@ int main() {
 
     add_history_entry(str);
   }
-
-end:
-  /* free_tokens(); */
-  /* free_subcommands(); */
 
   if (str != NULL) {
     free(str);
