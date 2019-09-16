@@ -267,11 +267,6 @@ void foreground(process *proc) {
     return;
   }
 
-  if (!check_stopped(cur->job)) {
-    fprintf(stderr, "job already running\n");
-    return;
-  }
-
   for (process *tmp = cur->job->first_process; tmp; tmp = tmp->next_process) {
     tmp->stopped = 0;
   }
