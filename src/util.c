@@ -37,6 +37,17 @@ void insert_job(job *j) {
   shell_state.job_table = ent;
 }
 
+job_entry *get_job(int req) {
+  int idx = 1;
+  job_entry *cur = shell_state.job_table;
+  while (cur != NULL && req != idx) {
+    cur = cur->next;
+    idx++;
+  }
+
+  return cur;
+}
+
 bool check_stopped(job *j) {
   for (process *p = j->first_process; p; p = p->next_process) {
     if (!p->stopped)
