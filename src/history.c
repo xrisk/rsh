@@ -29,6 +29,9 @@ void initialize_history() {
 }
 
 void add_history_entry(char *line) {
+
+  if (strspn(line, "\t ") == strlen(line))
+    return;
   int new_index = (shell_state.head - 1) % MAX_HISTORY;
   if (new_index < 0)
     new_index += MAX_HISTORY;
