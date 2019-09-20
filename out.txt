@@ -1,4 +1,0 @@
-pid -- 1617
-state: R (running)
-mem: 1976 kB
-exe path:/mnt/xrisk/school/os/rsh/linux/rsh
