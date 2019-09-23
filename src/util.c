@@ -63,19 +63,59 @@ bool check_completed(job *j) {
   return true;
 }
 
-void prune_jobs() {
+void free_process(process *proc) {
+  if (proc == NULL)
+    return;
+  if (proc->argv) {
+    for (int i = 0; i < proc->n_tokens; ++i) {
+      free(proc->argv[i]);
+      proc->argv[i] = NULL;
+    }
+    free(proc->argv);
+    proc->argv = NULL;
+  }
+  free(proc->infile);
+  free(proc->outfile);
+  free(proc);
+}
+
+void free_job(job *j) {
+  if (j == NULL)
+    return;
+  process *p = j->first_process;
+  while (p) {
+    process *tmp = p;
+    p = p->next_process;
+    free_process(tmp);
+  }
+  free(j);
+}
+
+void free_job_entry(job_entry *ent) {
+  free_job(ent->job);
+  ent->job = NULL;
+  free(ent);
+  ent = NULL;
+}
+
+void prune_jobs(void) {
   job_entry *j = shell_state.job_table;
-  job_entry *jlast = NULL;
+  job_entry *jlast = NULL, *to_free = NULL;
   while (j) {
     if (check_completed(j->job)) {
       if (jlast == NULL)
         shell_state.job_table = j->next;
       else
         jlast->next = j->next;
+      to_free = j;
     } else {
       jlast = j;
     }
     j = j->next;
+    if (to_free != NULL) {
+      free_job_entry(to_free);
+      to_free = NULL;
+    }
   }
 }
 

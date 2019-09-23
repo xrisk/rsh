@@ -142,6 +142,7 @@ int main() {
     line *input_line = parse_line(str);
 
     interpret(input_line);
+    free(input_line);
 
     add_history_entry(str);
   }
