@@ -74,10 +74,13 @@ char *get_shortdir(void) {
   return &(shell_state.shortdir[0]);
 }
 
-void show_prompt(void) {
+char *show_prompt(void) {
+
+  char *prompt = calloc(1024, sizeof(char));
   char *user, *host, *shortdir;
   user = get_user_name();
   host = get_computer_name();
   shortdir = get_shortdir();
-  printf("<%s@%s:%s> ", user, host, shortdir);
+  sprintf(prompt, "<%s@%s:%s> ", user, host, shortdir);
+  return prompt;
 }

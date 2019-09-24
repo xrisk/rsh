@@ -8,6 +8,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <readline/history.h>
+#include <readline/readline.h>
+
 #include "history.h"
 #include "interpret.h"
 #include "main.h"
@@ -115,7 +118,6 @@ void glob(char **ptr_to_line) {
 int main() {
 
   char *str = NULL;
-  size_t line_sz = 0;
 
   initialize();
 
@@ -125,16 +127,31 @@ int main() {
     if (shell_state.quit)
       break;
 
-    show_prompt();
-    if (getline(&str, &line_sz, stdin) < 0) {
-      if (feof(stdin)) {
-        clearerr(stdin);
-        printf("\n");
-        continue;
-      }
-      perror("getline");
-      exit(1);
+    char *prompt = show_prompt();
+
+    str = readline(prompt);
+
+    free(prompt);
+
+    if (str == NULL) {
+      clearerr(stdin);
+      printf("\n");
+      continue;
     }
+
+    if (strlen(str) > 0) {
+      add_history(str);
+    }
+
+    /* if (getline(&str, &line_sz, stdin) < 0) { */
+    /*   if (feof(stdin)) { */
+    /*     clearerr(stdin); */
+    /*     printf("\n"); */
+    /*     continue; */
+    /*   } */
+    /*   perror("getline"); */
+    /*   exit(1); */
+    /* } */
 
     str[strcspn(str, "\n")] = '\0';
     glob(&str);
