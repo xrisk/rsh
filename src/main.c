@@ -32,6 +32,7 @@ void sigchld_handler() {
 }
 
 void cleanup() {
+  free_job_table();
   persist_history();
   free_history();
   tcsetattr(shell_state.shell_terminal, TCSADRAIN, &shell_state.shell_tmodes);
@@ -72,11 +73,11 @@ void initialize() {
     initialize_history();
 
     signal(SIGCHLD, sigchld_handler);
-
     atexit(cleanup);
+
   } else {
     fprintf(stderr, "stdin is not a tty; exiting!\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -111,8 +112,6 @@ void glob(char **ptr_to_line) {
   free(new);
 }
 
-void atexit_handler() { persist_history(); }
-
 int main() {
 
   char *str = NULL;
@@ -123,9 +122,10 @@ int main() {
   set_homedir();
 
   while (1) {
+    if (shell_state.quit)
+      break;
+
     show_prompt();
-    /* fprintf(stderr, "%d %d\n", tcgetpgrp(shell_state.shell_terminal), */
-    /* getpgid(0)); */
     if (getline(&str, &line_sz, stdin) < 0) {
       if (feof(stdin)) {
         clearerr(stdin);

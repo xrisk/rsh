@@ -98,6 +98,15 @@ void free_job_entry(job_entry *ent) {
   ent = NULL;
 }
 
+void free_job_table(void) {
+  job_entry *j = shell_state.job_table;
+  while (j) {
+    job_entry *t = j;
+    j = j->next;
+    free_job_entry(t);
+  }
+}
+
 void prune_jobs(void) {
   job_entry *j = shell_state.job_table;
   job_entry *jlast = NULL, *to_free = NULL;

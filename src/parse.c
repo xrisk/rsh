@@ -14,20 +14,24 @@ line *parse_line(char *str) {
   char *ptr;
 
   str = strdup(str);
+  char *to_free = str;
+
   while ((ptr = strsep(&str, ";")) != NULL) {
     *head = parse_job(ptr);
     head = &((*head)->next_job);
   }
-  free(str);
+
+  free(to_free);
   return l;
 }
 
-job *parse_job(char *str) {
+job *parse_job(char *s) {
   job *j = calloc(1, sizeof(job));
   process **head = &(j->first_process);
   char *ptr;
 
-  str = strdup(str);
+  char *str = strdup(s);
+  char *to_free = str;
 
   j->fg = true;
   int idx = strlen(str) - 1;
@@ -45,11 +49,11 @@ job *parse_job(char *str) {
     head = &((*head)->next_process);
   }
 
-  free(str);
+  free(to_free);
   return j;
 }
 
-process *parse_process(char *str) {
+process *parse_process(char *s) {
   process *p = calloc(1, sizeof(process));
   p->infile = NULL;
   p->outfile = NULL;
@@ -59,7 +63,9 @@ process *parse_process(char *str) {
   char **argv = calloc(32, sizeof(char *));
   int cur_tok = 0;
 
-  str = strdup(str);
+  char *str = strdup(s);
+  char *to_free = str;
+
   while ((ptr = strsep(&str, " \t")) != NULL) {
     if (ptr[0] == '\0')
       continue;
@@ -134,6 +140,7 @@ process *parse_process(char *str) {
   p->n_tokens = cur_tok;
   p->argv = argv;
 
-  free(str);
+  free(to_free);
+
   return p;
 }
