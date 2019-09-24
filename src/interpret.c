@@ -35,7 +35,8 @@ void interpret(line *inp) {
   job *j = inp->first_job;
 
   while (j) {
+    job *next = j->next_job;
     launch_job(j, j->fg);
-    j = j->next_job;
+    j = next;
   }
 }

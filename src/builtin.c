@@ -58,7 +58,7 @@ int search_builtin(process *proc) {
   } else if (strcmp(tokens[0], "history") == 0) {
     show_history(proc);
   } else if (strcmp(tokens[0], "quit") == 0 || strcmp(tokens[0], "exit") == 0) {
-    exit(0);
+    shell_state.quit = true;
   } else if (strcmp(tokens[0], "jobs") == 0) {
     print_job_table();
   } else if (strcmp(tokens[0], "setenv") == 0) {

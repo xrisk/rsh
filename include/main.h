@@ -53,6 +53,9 @@ struct state {
   int n_history, head;
 
   job_entry *job_table;
+  bool quit;
 };
+
+void do_exit(void);
 
 #endif

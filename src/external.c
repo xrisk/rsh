@@ -175,8 +175,10 @@ void launch_job(job *j, int fg) {
   outfile = STDOUT_FILENO;
 
   if (!j->first_process->next_process) {
-    if (launch_builtin(j->first_process, infile, outfile))
+    if (launch_builtin(j->first_process, infile, outfile)) {
+      free_job(j);
       return;
+    }
   }
 
   sigsetmask(sigmask(SIGCHLD));

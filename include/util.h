@@ -9,5 +9,6 @@ void wait_for_job(job *j);
 void print_job_table(void);
 bool check_stopped(job *j);
 job_entry *get_job(int req);
+void free_job_table(void);
 
 #endif

@@ -8,5 +8,6 @@
 void launch_job(job *j, int fg);
 void foreground(process *proc);
 void background(process *proc);
+void free_job(job *j);
 
 #endif
