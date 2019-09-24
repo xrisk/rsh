@@ -34,7 +34,7 @@ void sigchld_handler() {
 void cleanup() {
   persist_history();
   free_history();
-  tcsetattr(shell_state.shell_terminal, TCSADRAIN, &shell_state.shell_tmodes);
+  tcsetattr(shell_state.shell_terminal, TCSAFLUSH, &shell_state.shell_tmodes);
 }
 
 void initialize() {

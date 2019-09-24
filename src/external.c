@@ -135,17 +135,19 @@ void launch_process(process *proc, pid_t pgid, int infile, int outfile,
 
 void put_job_to_fg(job *j, int cont) {
 
+  struct termios termattr;
+  tcgetattr(shell_state.shell_terminal, &termattr);
+
   tcsetpgrp(shell_state.shell_terminal, j->pgid);
+
   if (cont) {
     kill(j->pgid, SIGCONT);
   }
 
-  struct termios termattr;
-  tcgetattr(shell_state.shell_terminal, &termattr);
-
   wait_for_job(j);
+
   tcsetpgrp(shell_state.shell_terminal, shell_state.shell_pgid);
-  tcsetattr(shell_state.shell_terminal, TCSADRAIN, &termattr);
+  tcsetattr(shell_state.shell_terminal, TCSAFLUSH, &termattr);
 }
 
 void put_job_to_bg(job *j, int cont) {
