@@ -11,7 +11,12 @@ void debug_print(job *j) {
   if (j) {
     process *p = j->first_process;
     while (p) {
-      printf("(%s) ", (p->stopped) ? "Stopped" : "Running");
+      if (p->stopped)
+        printf("(%s) ", "Stopped");
+      else if (p->completed)
+        printf("(%s) ", "Completed");
+      else
+        printf("(%s) ", "Running");
       for (size_t i = 0; i < p->n_tokens; ++i) {
         printf("%s ", p->argv[i]);
       }
@@ -21,7 +26,7 @@ void debug_print(job *j) {
         printf("<%s ", p->infile);
       printf(" [%d] ", p->pid);
       if (p->next_process)
-        printf("|");
+        printf("| ");
       p = p->next_process;
     }
   }
@@ -176,6 +181,14 @@ int update_status(pid_t pid, int status) {
 }
 
 void wait_for_job(job *j) {
-  while (!(check_stopped(j) || check_completed(j)))
-    ;
+  bool exit = false;
+  while (!exit) {
+    exit = true;
+    for (process *p = j->first_process; p; p = p->next_process) {
+      if (!(p->completed || p->stopped)) {
+        exit = false;
+        break;
+      }
+    }
+  }
 }
