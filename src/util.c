@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "main.h"
 #include "util.h"
@@ -190,5 +191,6 @@ void wait_for_job(job *j) {
         break;
       }
     }
+    usleep(100000);
   }
 }
