@@ -22,6 +22,9 @@ extern struct state shell_state;
 
 bool launch_builtin(process *proc, int infile, int outfile) {
 
+  int in = dup(infile);
+  int out = dup(outfile);
+
   if (proc->infile != NULL) {
     int fd = open(proc->infile, O_RDONLY);
     if (fd < 0) {
@@ -30,9 +33,6 @@ bool launch_builtin(process *proc, int infile, int outfile) {
     }
     infile = fd;
   }
-
-  int in = dup(infile);
-  int out = dup(outfile);
 
   if (infile != STDIN_FILENO) {
     dup2(infile, STDIN_FILENO);
