@@ -11,7 +11,7 @@ extern struct state shell_state;
 void kjob(process *proc) {
 
   if (proc->n_tokens != 3) {
-    fprintf(stderr, "usage: kjob <jobNumber> <signalNumber>");
+    fprintf(stderr, "usage: kjob <jobNumber> <signalNumber>\n");
     return;
   }
 
@@ -40,7 +40,7 @@ void kjob(process *proc) {
 
 void overkill(process *proc) {
   if (proc->n_tokens != 1) {
-    fprintf(stderr, "usage: overkill");
+    fprintf(stderr, "usage: overkill\n");
     return;
   }
 
