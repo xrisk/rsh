@@ -1,9 +1,9 @@
 project('rsh', 'c')
 
-readline = meson.get_compiler('c').find_library('libreadline', dirs: ['/usr/local/opt/readline/lib'])
+readline = meson.get_compiler('c').find_library('libreadline', dirs: ['/usr/local/opt/readline/lib'], required: false)
 
 if not readline.found()
-    readline = dependency('libreadline')
+    readline = meson.get_compiler('c').find_library('libreadline')
 endif
 
 inc = include_directories('include')
