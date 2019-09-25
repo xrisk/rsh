@@ -191,6 +191,8 @@ void wait_for_job(job *j) {
         break;
       }
     }
-    usleep(100000);
+    if (exit)
+      break;
+    sleep(1);
   }
 }
