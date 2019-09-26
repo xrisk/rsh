@@ -33,7 +33,7 @@ void kjob(process *proc) {
     return;
   }
 
-  if (kill(j->job->pgid, signalNumber) < 0) {
+  if (kill(-j->job->pgid, signalNumber) < 0) {
     perror("kill");
   }
 }
@@ -46,7 +46,7 @@ void overkill(process *proc) {
 
   job_entry *j = shell_state.job_table;
   while (j) {
-    kill(j->job->pgid, SIGKILL);
+    kill(-j->job->pgid, SIGKILL);
     j = j->next;
   }
 }

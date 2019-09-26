@@ -141,7 +141,7 @@ void put_job_to_fg(job *j, int cont) {
   tcsetpgrp(shell_state.shell_terminal, j->pgid);
 
   if (cont) {
-    kill(j->pgid, SIGCONT);
+    kill(-j->pgid, SIGCONT);
   }
 
   wait_for_job(j);
@@ -152,7 +152,7 @@ void put_job_to_fg(job *j, int cont) {
 
 void put_job_to_bg(job *j, int cont) {
   if (cont)
-    kill(j->pgid, SIGCONT);
+    kill(-j->pgid, SIGCONT);
 }
 
 void launch_job(job *j, int fg) {
