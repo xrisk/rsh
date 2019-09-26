@@ -241,13 +241,17 @@ void background(process *proc) {
     return;
   }
 
-  if (!check_stopped(cur->job)) {
-    fprintf(stderr, "job already running\n");
-    return;
-  }
+  bool f = false;
 
   for (process *tmp = cur->job->first_process; tmp; tmp = tmp->next_process) {
-    tmp->stopped = 0;
+    if (tmp->stopped) {
+      tmp->stopped = 0;
+      f = true;
+    }
+  }
+
+  if (!f) {
+    fprintf(stderr, "job is already running\n");
   }
 
   put_job_to_bg(cur->job, 1);
@@ -272,7 +276,8 @@ void foreground(process *proc) {
   }
 
   for (process *tmp = cur->job->first_process; tmp; tmp = tmp->next_process) {
-    tmp->stopped = 0;
+    if (tmp->stopped)
+      tmp->stopped = 0;
   }
 
   cur->job->fg = true;
