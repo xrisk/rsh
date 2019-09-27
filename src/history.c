@@ -1,7 +1,9 @@
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "history.h"
 #include "main.h"
@@ -60,7 +62,21 @@ void show_history(process *p) {
 }
 
 void persist_history() {
-  FILE *f = fopen("rsh_history", "w");
+
+  int homedir = open(shell_state.homedir, O_RDONLY);
+
+  if (homedir < 0) {
+    perror("persist_history");
+    return;
+  }
+
+  int fd = openat(homedir, "rsh_history", O_WRONLY | O_CREAT | O_TRUNC);
+  if (homedir < 0) {
+    perror("persist_history");
+    return;
+  }
+
+  FILE *f = fdopen(fd, "w");
   if (f == NULL) {
     perror("failed to open history file for writing");
     return;
@@ -73,6 +89,8 @@ void persist_history() {
     idx = (idx + 1) % MAX_HISTORY;
   } while (idx != shell_state.head);
   fclose(f);
+  close(fd);
+  close(homedir);
 }
 
 void free_history() {
