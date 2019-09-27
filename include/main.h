@@ -54,6 +54,10 @@ struct state {
 
   job_entry *job_table;
   bool quit;
+
+  char **alarm_argv;
+  int alarm_sleep;
+  int alarm_duration;
 };
 
 void do_exit(void);

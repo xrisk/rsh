@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "builtin.h"
+#include "cronjob.h"
 #include "env.h"
 #include "external.h"
 #include "history.h"
@@ -73,6 +74,8 @@ int search_builtin(process *proc) {
     kjob(proc);
   } else if (strcmp(tokens[0], "overkill") == 0) {
     overkill(proc);
+  } else if (strcmp(tokens[0], "cronjob") == 0) {
+    cronjob(proc);
   } else
     return false;
 
