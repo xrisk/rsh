@@ -1,6 +1,11 @@
 # rsh
 
-## Build:
+rsh (rishav's shell) is a basic shell developed as part of the CSE-1 course (Monsoon 2019) at IIIT Hyderabad.
+
+Notable features include piping, redirection and proper job control with foreground and background job support. Also present is history recall and tab completion for filenames.
+A variety of builtins have also been implemented (see `src/builtin.c`).
+
+## Build
 
 rsh uses the [meson](https://mesonbuild.com/) build system. To install, either `apt install meson` or `brew install meson`.
 
@@ -49,6 +54,10 @@ The executable can be found at `build/rsh`.
 - `prompt.c`: generates the prompt
 - `util.c`: has utility functions for operating on the job table, etc.
 - `kill.c`: implements the `kjob` and `overkill` builtins
+
+## Known Bugs
+
+- Input of the form `foo>out.txt` or `foo> out.txt` is not parsed correctly.
 
 ## License
 
