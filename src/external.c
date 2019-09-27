@@ -181,8 +181,10 @@ void launch_job(job *j, int fg) {
     }
   }
 
-  sigsetmask(sigmask(SIGCHLD));
-  ;
+  sigset_t block;
+  sigemptyset(&block);
+  sigaddset(&block, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &block, NULL);
 
   for (proc = j->first_process; proc != NULL; proc = proc->next_process) {
     if (proc->next_process) {
@@ -214,7 +216,7 @@ void launch_job(job *j, int fg) {
   }
 
   insert_job(j);
-  sigsetmask(0);
+  sigprocmask(SIG_UNBLOCK, &block, NULL);
 
   if (fg) {
     put_job_to_fg(j, 0);
